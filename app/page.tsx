@@ -81,9 +81,9 @@ export default function CountryMaker() {
     const flagRef = useRef<HTMLDivElement | null>(null);
 
     const [countryName, setCountryName] = useState("Republic of Norden");
-    const [layout, setLayout] = useState<LayoutKey>("vertical");
-    const [c1, setC1] = useState("#0055A4");
-    const [c2, setC2] = useState("#FFFFFF");
+    const [layout, setLayout] = useState<LayoutKey>("nordic");
+    const [c1, setC1] = useState("#FFFFFF");
+    const [c2, setC2] = useState("#4F93CE");
     const [c3, setC3] = useState("#D21034");
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -94,7 +94,7 @@ export default function CountryMaker() {
     const [emblemName, setEmblemName] = useState("");
     const [customEmblemError, setCustomEmblemError] = useState("");
     const [customEmblemLoading, setCustomEmblemLoading] = useState(false);
-    const [emblemColor, setEmblemColor] = useState("#FFD700");
+    const [emblemColor, setEmblemColor] = useState("#F5A623");
     const [emblemSizeMode, setEmblemSizeMode] = useState<"L" | "XL">("L");
 
     const [showName, setShowName] = useState(false);
