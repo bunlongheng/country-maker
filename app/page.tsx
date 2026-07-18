@@ -1,5 +1,6 @@
 "use client";
 import { FLAG_EMBLEMS } from "@/lib/flagEmblems";
+import { LAYOUTS, buildFlagStyle, bandsForLayout, sanitizeFilename, sanitizeSvg, type LayoutKey } from "@/lib/flag";
 
 import React, { useState, useRef, useMemo } from "react";
 
@@ -54,29 +55,6 @@ const EMBLEM_REGISTRY: EmblemEntry[] = [
 
 const EMBLEM_SUGGESTIONS = Array.from(new Set([...EMBLEM_REGISTRY.map((item) => item.slug), "academic-cap", "cloud", "flag", "gift", "hand-raised", "home", "language", "map-pin", "musical-note", "paper-airplane", "puzzle-piece", "scale", "user-group", "wrench"])).sort();
 
-type LayoutKey =
-    | "vertical" | "horizontal" | "vertical-bi" | "horizontal-bi"
-    | "nordic" | "saltire" | "diagonal" | "chevron"
-    | "disc" | "canton" | "quadrant" | "solid"
-    | "stripes" | "star-stripes";
-
-const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
-    { key: "vertical", name: "Vertical Tricolor", bands: 3 },
-    { key: "horizontal", name: "Horizontal Tricolor", bands: 3 },
-    { key: "vertical-bi", name: "Vertical Bicolor", bands: 2 },
-    { key: "horizontal-bi", name: "Horizontal Bicolor", bands: 2 },
-    { key: "stripes", name: "Stripes (USA)", bands: 2 },
-    { key: "star-stripes", name: "Stars + Stripes", bands: 3 },
-    { key: "nordic", name: "Nordic Cross", bands: 2 },
-    { key: "saltire", name: "X Saltire", bands: 2 },
-    { key: "diagonal", name: "Diagonal Split", bands: 2 },
-    { key: "chevron", name: "Chevron", bands: 2 },
-    { key: "disc", name: "Sun Disc (Japan)", bands: 2 },
-    { key: "canton", name: "Canton + Field", bands: 3 },
-    { key: "quadrant", name: "Quadrants", bands: 2 },
-    { key: "solid", name: "Solid", bands: 1 },
-];
-
 export default function CountryMaker() {
     const flagRef = useRef<HTMLDivElement | null>(null);
 
@@ -114,52 +92,9 @@ export default function CountryMaker() {
     );
 
     const emblemSize = emblemSizeMode === "XL" ? XL_EMBLEM_SIZE : L_EMBLEM_SIZE;
-    const activeBands = LAYOUTS.find((l) => l.key === layout)?.bands ?? 3;
+    const activeBands = bandsForLayout(layout);
 
-    const { baseStyle, overlays } = useMemo((): { baseStyle: React.CSSProperties; overlays: { clip: string; color: string }[] } => {
-        const stripes = `repeating-linear-gradient(to bottom, ${c1} 0 7.6923%, ${c2} 7.6923% 15.3846%)`;
-        switch (layout) {
-            case "solid":
-                return { baseStyle: { background: c1 }, overlays: [] };
-            case "vertical-bi":
-                return { baseStyle: { background: `linear-gradient(to right, ${c1} 0 50%, ${c2} 50% 100%)` }, overlays: [] };
-            case "horizontal-bi":
-                return { baseStyle: { background: `linear-gradient(to bottom, ${c1} 0 50%, ${c2} 50% 100%)` }, overlays: [] };
-            case "horizontal":
-                return { baseStyle: { background: `linear-gradient(to bottom, ${c1} 0 33.34%, ${c2} 33.34% 66.67%, ${c3} 66.67% 100%)` }, overlays: [] };
-            case "vertical":
-                return { baseStyle: { background: `linear-gradient(to right, ${c1} 0 33.34%, ${c2} 33.34% 66.67%, ${c3} 66.67% 100%)` }, overlays: [] };
-            case "stripes":
-                return { baseStyle: { background: stripes }, overlays: [] };
-            case "star-stripes":
-                return { baseStyle: { background: `linear-gradient(${c3},${c3}) 0 0 / 40% 53.85% no-repeat, ${stripes}` }, overlays: [] };
-            case "canton":
-                return { baseStyle: { background: `linear-gradient(${c1}, ${c1}) 0 0 / 40% 100% no-repeat, linear-gradient(to bottom, ${c2} 0 50%, ${c3} 50% 100%)` }, overlays: [] };
-            case "quadrant":
-                return {
-                    baseStyle: { background: `linear-gradient(${c1},${c1}) 0 0/50% 50% no-repeat, linear-gradient(${c2},${c2}) 100% 0/50% 50% no-repeat, linear-gradient(${c2},${c2}) 0 100%/50% 50% no-repeat, linear-gradient(${c1},${c1}) 100% 100%/50% 50% no-repeat` },
-                    overlays: [],
-                };
-            case "nordic":
-                return { baseStyle: { background: `linear-gradient(${c2}, ${c2}) 0 50% / 100% 22% no-repeat, linear-gradient(${c2}, ${c2}) 32% 0 / 16% 100% no-repeat, ${c1}` }, overlays: [] };
-            case "diagonal":
-                return { baseStyle: { background: `linear-gradient(135deg, ${c1} 0 50%, ${c2} 50% 100%)` }, overlays: [] };
-            case "disc":
-                return { baseStyle: { background: `radial-gradient(circle at 50% 50%, ${c2} 0 33%, transparent 33.3%), ${c1}` }, overlays: [] };
-            case "saltire":
-                return {
-                    baseStyle: { background: c1 },
-                    overlays: [
-                        { clip: "polygon(0% 0%, 15% 0%, 100% 82%, 100% 100%, 85% 100%, 0% 18%)", color: c2 },
-                        { clip: "polygon(100% 0%, 100% 18%, 15% 100%, 0% 100%, 0% 82%, 85% 0%)", color: c2 },
-                    ],
-                };
-            case "chevron":
-                return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(0% 0%, 48% 50%, 0% 100%)", color: c2 }] };
-            default:
-                return { baseStyle: { background: c1 }, overlays: [] };
-        }
-    }, [layout, c1, c2, c3]);
+    const { baseStyle, overlays } = useMemo(() => buildFlagStyle(layout, c1, c2, c3), [layout, c1, c2, c3]);
 
     const normalizeEmblemName = (raw: string) => raw.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     const normalizedEmblemQuery = normalizeEmblemName(emblemName);
@@ -187,17 +122,12 @@ export default function CountryMaker() {
     };
     const iconForRef = (ref: string): SvgIcon | undefined => (ref.startsWith("custom:") ? undefined : emblemEntryByName.get(ref)?.Icon);
 
-    const renderRef = (ref: string, style: React.CSSProperties, key?: React.Key) => {
-        const svg = svgForRef(ref);
+    // Single renderer for either a registry entry or a string ref (name / custom:slug).
+    const renderEmblem = (source: EmblemEntry | string, style: React.CSSProperties, key?: React.Key) => {
+        const svg = typeof source === "string" ? svgForRef(source) : source.svg;
         if (svg) return <div key={key} className="[&>svg]:w-full [&>svg]:h-full" style={style} dangerouslySetInnerHTML={{ __html: svg }} />;
-        const Icon = iconForRef(ref);
+        const Icon = typeof source === "string" ? iconForRef(source) : source.Icon;
         return Icon ? <Icon key={key} style={style} /> : null;
-    };
-
-    const renderGridEmblem = (entry: EmblemEntry, style: React.CSSProperties) => {
-        if (entry.svg) return <div className="[&>svg]:w-full [&>svg]:h-full" style={style} dangerouslySetInnerHTML={{ __html: entry.svg }} />;
-        const Icon = entry.Icon!;
-        return <Icon style={style} />;
     };
 
     const toggleEmblem = (name: string) => setEmblems((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
@@ -222,7 +152,8 @@ export default function CountryMaker() {
             if (!res.ok) throw new Error(`Emblem not found: ${slug}`);
             const rawSvg = await res.text();
             if (!rawSvg.includes("<svg")) throw new Error("Invalid SVG");
-            const normalizedSvg = rawSvg.replace(/width="[^"]*"/g, "").replace(/height="[^"]*"/g, "").replace(/stroke="[^"]*"/g, 'stroke="currentColor"').replace(/fill="[^"]*"/g, 'fill="none"');
+            const normalizedSvg = sanitizeSvg(rawSvg).replace(/width="[^"]*"/g, "").replace(/height="[^"]*"/g, "").replace(/stroke="[^"]*"/g, 'stroke="currentColor"').replace(/fill="[^"]*"/g, 'fill="none"');
+            if (!normalizedSvg) throw new Error("Unsafe or invalid SVG");
             setCustomSvgs((p) => ({ ...p, [slug]: normalizedSvg }));
             const ref = `custom:${slug}`;
             setEmblems((p) => (p.includes(ref) ? p : [...p, ref]));
@@ -250,7 +181,7 @@ export default function CountryMaker() {
         if (!flagRef.current) return;
         const { default: html2canvas } = await import("html2canvas");
         const canvas = await html2canvas(flagRef.current, { backgroundColor: null, scale: 3, useCORS: true });
-        const safeName = (countryName || "flag").toLowerCase().replace(/[^a-z0-9-]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "flag";
+        const safeName = sanitizeFilename(countryName);
         const link = document.createElement("a");
         link.download = `${safeName}.png`;
         link.href = canvas.toDataURL("image/png");
@@ -277,8 +208,9 @@ export default function CountryMaker() {
                 *::-webkit-scrollbar-thumb { background: #36363f; border-radius: 9999px; border: 2px solid #0b0b0d; }
                 *::-webkit-scrollbar-thumb:hover { background: #4a4a55; }
             `}</style>
-            <div className="h-full max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[3fr_2fr] gap-4 md:gap-6">
-                <section className="h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl overflow-auto">
+            <h1 className="sr-only">Country Maker - design your own country flag</h1>
+            <main className="h-full max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[3fr_2fr] gap-4 md:gap-6">
+                <section aria-label="Flag preview" className="h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl overflow-auto">
                     <div className="h-full min-h-[260px] flex flex-col items-center justify-center gap-6 p-8 md:p-12">
                         <div
                             ref={flagRef}
@@ -305,7 +237,7 @@ export default function CountryMaker() {
                                                 {textEmblem}
                                             </span>
                                         ) : (
-                                            renderRef(ref, itemStyle, `${ref}-${i}`)
+                                            renderEmblem(ref, itemStyle, `${ref}-${i}`)
                                         ),
                                     )}
                                 </div>
@@ -336,10 +268,10 @@ export default function CountryMaker() {
                 </section>
 
                 <section className="h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 overflow-hidden flex flex-col">
-                    <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
+                    <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6" role="group" aria-label="Flag controls">
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3 block">Country Name</label>
-                            <input value={countryName} placeholder="Republic of ..." onChange={(e) => setCountryName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
+                            <label htmlFor="country-name" className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3 block">Country Name</label>
+                            <input id="country-name" value={countryName} placeholder="Republic of ..." onChange={(e) => setCountryName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
                         </div>
 
                         <div>
@@ -363,10 +295,10 @@ export default function CountryMaker() {
                             </div>
                             <div className="grid grid-cols-10 gap-2">
                                 {PRESET_COLORS.map((color) => (
-                                    <button key={color} onClick={() => setC1(color)} className={cn("aspect-square rounded-full transition-all active:scale-90 border-2", c1 === color ? "border-white scale-110 shadow-lg" : "border-transparent")} style={{ backgroundColor: color, boxShadow: color === "#FFFFFF" ? "inset 0 0 0 1px rgba(255,255,255,0.2)" : undefined }} title={`Set band 1 to ${color}`} />
+                                    <button key={color} onClick={() => setC1(color)} aria-label={`Set band 1 color to ${color}`} className={cn("aspect-square rounded-full transition-all active:scale-90 border-2", c1 === color ? "border-white scale-110 shadow-lg" : "border-transparent")} style={{ backgroundColor: color, boxShadow: color === "#FFFFFF" ? "inset 0 0 0 1px rgba(255,255,255,0.2)" : undefined }} title={`Set band 1 to ${color}`} />
                                 ))}
                             </div>
-                            <p className="text-[10px] text-zinc-600 mt-2">Presets set band 1. Fine-tune each band below.</p>
+                            <p className="text-[10px] text-zinc-400 mt-2">Presets set band 1. Fine-tune each band below.</p>
                         </div>
 
                         <div>
@@ -460,8 +392,8 @@ export default function CountryMaker() {
                             <div className="max-h-[30dvh] overflow-y-auto p-3 bg-black/20 rounded-xl border border-white/5">
                                 <div className="grid grid-cols-6 sm:grid-cols-7 xl:grid-cols-6 gap-2">
                                     {filteredEmblems.map((item) => (
-                                        <button key={item.name} onClick={() => toggleEmblem(item.name)} title={`${item.name} - ${item.slug}`} className={cn("p-2 rounded-lg transition flex justify-center items-center h-9", emblems.includes(item.name) ? "bg-white/15 text-white ring-1 ring-white/40" : "text-zinc-500 hover:text-zinc-300")}>
-                                            {renderGridEmblem(item, { width: 20, height: 20, color: "currentColor" })}
+                                        <button key={item.name} onClick={() => toggleEmblem(item.name)} aria-label={`${emblems.includes(item.name) ? "Remove" : "Add"} ${item.name} emblem`} aria-pressed={emblems.includes(item.name)} title={`${item.name} - ${item.slug}`} className={cn("p-2 rounded-lg transition flex justify-center items-center h-9", emblems.includes(item.name) ? "bg-white/15 text-white ring-1 ring-white/40" : "text-zinc-500 hover:text-zinc-300")}>
+                                            {renderEmblem(item, { width: 20, height: 20, color: "currentColor" })}
                                         </button>
                                     ))}
                                 </div>
@@ -488,7 +420,7 @@ export default function CountryMaker() {
                         </button>
                     </div>
                 </section>
-            </div>
+            </main>
         </div>
     );
 }
