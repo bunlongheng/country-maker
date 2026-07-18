@@ -4,9 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
     title: "Country Maker - Design your own flag",
     description: "Design your own country flag - 14 layouts, custom colors, multiple emblems (dragon, sun, Angkor Wat, crescent), text and name. Download as PNG.",
-    icons: {
-        icon: "/favicon.svg",
-    },
     openGraph: {
         title: "Country Maker",
         description: "Design your own country flag and download it as a PNG.",
