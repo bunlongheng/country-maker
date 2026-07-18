@@ -25,8 +25,9 @@ import BuildingLibraryIcon from "@heroicons/react/24/outline/BuildingLibraryIcon
 
 const PRESET_COLORS = ["#D21034", "#CE1126", "#B22234", "#FF0000", "#F77F00", "#FFB700", "#FFD700", "#FCD116", "#009739", "#007A3D", "#00843D", "#008751", "#0055A4", "#003399", "#002868", "#00247D", "#39A9DB", "#75AADB", "#000000", "#FFFFFF"];
 
-const L_EMBLEM_SIZE = 100;
-const XL_EMBLEM_SIZE = Math.round(L_EMBLEM_SIZE * 1.4);
+const EMBLEM_SIZE_MIN = 40;
+const EMBLEM_SIZE_MAX = 240;
+const EMBLEM_SIZE_DEFAULT = 100;
 
 type SvgIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 type EmblemEntry = { name: string; slug: string; Icon?: SvgIcon; svg?: string };
@@ -73,7 +74,7 @@ export default function CountryMaker() {
     const [customEmblemError, setCustomEmblemError] = useState("");
     const [customEmblemLoading, setCustomEmblemLoading] = useState(false);
     const [emblemColor, setEmblemColor] = useState("#F5A623");
-    const [emblemSizeMode, setEmblemSizeMode] = useState<"L" | "XL">("L");
+    const [emblemSize, setEmblemSize] = useState(EMBLEM_SIZE_DEFAULT);
 
     const [showName, setShowName] = useState(false);
     const [nameColor, setNameColor] = useState("#FFFFFF");
@@ -91,7 +92,6 @@ export default function CountryMaker() {
         [searchTerm],
     );
 
-    const emblemSize = emblemSizeMode === "XL" ? XL_EMBLEM_SIZE : L_EMBLEM_SIZE;
     const activeBands = bandsForLayout(layout);
 
     const { baseStyle, overlays } = useMemo(() => buildFlagStyle(layout, c1, c2, c3), [layout, c1, c2, c3]);
@@ -331,17 +331,29 @@ export default function CountryMaker() {
                                 </button>
                             </div>
 
-                            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                                <div className="flex items-center gap-3">
-                                    <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105" style={{ backgroundColor: emblemColor }}>
-                                        <input type="color" value={emblemColor} onChange={(e) => setEmblemColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
-                                    </label>
-                                    <span className="text-[10px] uppercase tracking-widest text-zinc-500">Emblem color</span>
+                            <div className="flex items-center gap-3 mb-3">
+                                <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105" style={{ backgroundColor: emblemColor }}>
+                                    <input type="color" value={emblemColor} onChange={(e) => setEmblemColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                </label>
+                                <span className="text-[10px] uppercase tracking-widest text-zinc-500">Emblem color</span>
+                            </div>
+
+                            <div className="mb-3">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label htmlFor="emblem-size" className="text-[10px] uppercase tracking-widest text-zinc-500">Emblem size</label>
+                                    <span className="text-[10px] font-mono text-zinc-400 tabular-nums">{emblemSize}px</span>
                                 </div>
-                                <div className="flex items-center bg-black/30 border border-zinc-800 rounded-xl p-1">
-                                    <button onClick={() => setEmblemSizeMode("L")} className={cn("px-4 py-1.5 text-xs rounded-lg font-bold transition", emblemSizeMode === "L" ? "bg-white text-black" : "text-zinc-500 hover:text-zinc-300")}>L</button>
-                                    <button onClick={() => setEmblemSizeMode("XL")} className={cn("px-4 py-1.5 text-xs rounded-lg font-bold transition", emblemSizeMode === "XL" ? "bg-white text-black" : "text-zinc-500 hover:text-zinc-300")}>XL</button>
-                                </div>
+                                <input
+                                    id="emblem-size"
+                                    type="range"
+                                    min={EMBLEM_SIZE_MIN}
+                                    max={EMBLEM_SIZE_MAX}
+                                    step={2}
+                                    value={emblemSize}
+                                    onChange={(e) => setEmblemSize(Number(e.target.value))}
+                                    aria-label="Emblem size"
+                                    className="w-full accent-white cursor-pointer"
+                                />
                             </div>
 
                             <div className="mb-3">
