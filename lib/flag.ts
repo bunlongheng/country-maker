@@ -84,6 +84,37 @@ export function toggleInList<T>(list: T[], item: T): T[] {
     return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
 }
 
+// ---- Placed emblems (each lives at its own x,y % on the flag) ----
+
+export type Placed = { id: string; kind: "emblem" | "text"; ref: string; x: number; y: number };
+
+/** Clamp a position value to the flag's 0-100% range. */
+export const clampPos = (n: number): number => Math.min(100, Math.max(0, n));
+
+/** How far to nudge a new emblem so it does not stack exactly on the centre. */
+export function centerNudge(placed: Placed[]): number {
+    const near = placed.filter((p) => Math.abs(p.x - 50) < 6 && Math.abs(p.y - 50) < 6).length;
+    return Math.min(near * 7, 28);
+}
+
+/** Add an emblem at the centre (nudged if busy). Pure - returns the new list. */
+export function addEmblemAt(placed: Placed[], id: string, ref: string): Placed[] {
+    const off = centerNudge(placed);
+    return [...placed, { id, kind: "emblem", ref, x: 50 + off, y: 50 + off }];
+}
+
+/** Create/update/remove the single text item to match the input. Pure. */
+export function upsertText(placed: Placed[], text: string): Placed[] {
+    if (!text.trim()) return placed.filter((p) => p.kind !== "text");
+    if (placed.some((p) => p.kind === "text")) return placed.map((p) => (p.kind === "text" ? { ...p, ref: text } : p));
+    return [...placed, { id: "text", kind: "text", ref: text, x: 50, y: 66 }];
+}
+
+/** Move one placed item to a new clamped position. Pure. */
+export function moveItem(placed: Placed[], id: string, x: number, y: number): Placed[] {
+    return placed.map((p) => (p.id === id ? { ...p, x: clampPos(x), y: clampPos(y) } : p));
+}
+
 /** Whitelist-sanitize an untrusted SVG string before it is injected as HTML. */
 export function sanitizeSvg(raw: string): string {
     if (!raw.includes("<svg")) return "";

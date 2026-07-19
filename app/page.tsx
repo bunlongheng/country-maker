@@ -1,6 +1,8 @@
 "use client";
 import { FLAG_EMBLEMS } from "@/lib/flagEmblems";
-import { LAYOUTS, buildFlagStyle, bandsForLayout, sanitizeFilename, sanitizeSvg, type LayoutKey } from "@/lib/flag";
+import { LAYOUTS, buildFlagStyle, bandsForLayout, sanitizeFilename, sanitizeSvg, type LayoutKey, type Placed } from "@/lib/flag";
+import { useEmblems } from "@/lib/useEmblems";
+import { FlagPreview } from "@/components/FlagPreview";
 
 import React, { useState, useRef, useMemo } from "react";
 
@@ -28,14 +30,12 @@ const PRESET_COLORS = ["#D21034", "#CE1126", "#B22234", "#FF0000", "#F77F00", "#
 const EMBLEM_SIZE_MIN = 40;
 const EMBLEM_SIZE_MAX = 240;
 const EMBLEM_SIZE_DEFAULT = 100;
+const CANVAS_MAX_PX = 1400; // cap html2canvas raster so huge emblems never blow up memory
 
 type SvgIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 type EmblemEntry = { name: string; slug: string; Icon?: SvgIcon; svg?: string };
-// A placed item lives on the flag at its own position (x,y as % of the flag).
-type Placed = { id: string; kind: "emblem" | "text"; ref: string; x: number; y: number };
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
-const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 const EMBLEM_REGISTRY: EmblemEntry[] = [
     ...FLAG_EMBLEMS.map((e) => ({ name: e.name, slug: e.slug, svg: e.svg })),
@@ -62,9 +62,7 @@ const EMBLEM_SUGGESTIONS = Array.from(new Set([...EMBLEM_REGISTRY.map((item) => 
 export default function CountryMaker() {
     const flagRef = useRef<HTMLDivElement | null>(null);
     const exportRef = useRef<HTMLDivElement | null>(null);
-    const idc = useRef(1);
-    const dragging = useRef<string | null>(null);
-    const nextId = () => `e${++idc.current}`;
+    const em = useEmblems(flagRef);
 
     const [countryName, setCountryName] = useState("Republic of Norden");
     const [layout, setLayout] = useState<LayoutKey>("nordic");
@@ -73,10 +71,6 @@ export default function CountryMaker() {
     const [c3, setC3] = useState("#D21034");
 
     const [searchTerm, setSearchTerm] = useState("");
-    const [placed, setPlaced] = useState<Placed[]>([{ id: "e1", kind: "emblem", ref: "Sun", x: 50, y: 50 }]);
-    const [selectedId, setSelectedId] = useState<string | null>("e1");
-    const [customSvgs, setCustomSvgs] = useState<Record<string, string>>({});
-    const [textEmblem, setTextEmblem] = useState("");
     const [emblemName, setEmblemName] = useState("");
     const [customEmblemError, setCustomEmblemError] = useState("");
     const [customEmblemLoading, setCustomEmblemLoading] = useState(false);
@@ -120,10 +114,7 @@ export default function CountryMaker() {
         );
     };
 
-    const svgForRef = (ref: string): string | undefined => {
-        if (ref.startsWith("custom:")) return customSvgs[ref.slice(7)];
-        return emblemEntryByName.get(ref)?.svg;
-    };
+    const svgForRef = (ref: string): string | undefined => (ref.startsWith("custom:") ? em.customSvgs[ref.slice(7)] : emblemEntryByName.get(ref)?.svg);
     const iconForRef = (ref: string): SvgIcon | undefined => (ref.startsWith("custom:") ? undefined : emblemEntryByName.get(ref)?.Icon);
 
     // Single renderer for either a registry entry or a string ref (name / custom:slug).
@@ -132,58 +123,6 @@ export default function CountryMaker() {
         if (svg) return <div key={key} className="[&>svg]:w-full [&>svg]:h-full" style={style} dangerouslySetInnerHTML={{ __html: svg }} />;
         const Icon = typeof source === "string" ? iconForRef(source) : source.Icon;
         return Icon ? <Icon key={key} style={style} /> : null;
-    };
-
-    // Add an emblem at the flag centre and select it (nudged if the centre is busy).
-    const addEmblem = (ref: string) => {
-        const id = nextId();
-        setPlaced((prev) => {
-            const nudge = prev.filter((p) => Math.abs(p.x - 50) < 6 && Math.abs(p.y - 50) < 6).length;
-            const off = Math.min(nudge * 7, 28);
-            return [...prev, { id, kind: "emblem", ref, x: 50 + off, y: 50 + off }];
-        });
-        setSelectedId(id);
-    };
-
-    const removePlaced = (id: string) => {
-        setPlaced((prev) => prev.filter((p) => p.id !== id));
-        if (id === "text") setTextEmblem("");
-        setSelectedId((s) => (s === id ? null : s));
-    };
-
-    const updateText = (v: string) => {
-        setTextEmblem(v);
-        setPlaced((prev) => {
-            if (!v.trim()) return prev.filter((p) => p.kind !== "text");
-            if (prev.some((p) => p.kind === "text")) return prev.map((p) => (p.kind === "text" ? { ...p, ref: v } : p));
-            return [...prev, { id: "text", kind: "text", ref: v, x: 50, y: 66 }];
-        });
-        if (v.trim()) setSelectedId("text");
-    };
-
-    const clearAll = () => {
-        setPlaced([]);
-        setTextEmblem("");
-        setSelectedId(null);
-    };
-
-    // Pointer drag - works for mouse and touch (pointer capture routes moves to the item).
-    const startDrag = (e: React.PointerEvent, id: string) => {
-        e.stopPropagation();
-        setSelectedId(id);
-        dragging.current = id;
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    };
-    const moveDrag = (e: React.PointerEvent) => {
-        if (dragging.current === null || !flagRef.current) return;
-        const r = flagRef.current.getBoundingClientRect();
-        const x = clamp(((e.clientX - r.left) / r.width) * 100, 0, 100);
-        const y = clamp(((e.clientY - r.top) / r.height) * 100, 0, 100);
-        const id = dragging.current;
-        setPlaced((prev) => prev.map((p) => (p.id === id ? { ...p, x, y } : p)));
-    };
-    const endDrag = () => {
-        dragging.current = null;
     };
 
     const loadEmblemByName = async (explicitSlug?: string) => {
@@ -195,7 +134,7 @@ export default function CountryMaker() {
         const matched = EMBLEM_REGISTRY.find((item) => item.slug === slug && item.Icon);
         if (matched) {
             setEmblemName(slug);
-            addEmblem(matched.name);
+            em.addEmblem(matched.name);
             setCustomEmblemError("");
             return;
         }
@@ -208,8 +147,8 @@ export default function CountryMaker() {
             if (!rawSvg.includes("<svg")) throw new Error("Invalid SVG");
             const normalizedSvg = sanitizeSvg(rawSvg).replace(/width="[^"]*"/g, "").replace(/height="[^"]*"/g, "").replace(/stroke="[^"]*"/g, 'stroke="currentColor"').replace(/fill="[^"]*"/g, 'fill="none"');
             if (!normalizedSvg) throw new Error("Unsafe or invalid SVG");
-            setCustomSvgs((p) => ({ ...p, [slug]: normalizedSvg }));
-            addEmblem(`custom:${slug}`);
+            em.addCustomSvg(slug, normalizedSvg);
+            em.addEmblem(`custom:${slug}`);
         } catch (err: any) {
             setCustomEmblemError(err?.message || "Failed to load emblem");
         } finally {
@@ -227,21 +166,20 @@ export default function CountryMaker() {
         const count = 1 + Math.floor(Math.random() * 2);
         const next: Placed[] = [];
         for (let i = 0; i < count; i++) {
-            next.push({ id: nextId(), kind: "emblem", ref: EMBLEM_REGISTRY[Math.floor(Math.random() * EMBLEM_REGISTRY.length)].name, x: 35 + Math.random() * 30, y: 35 + Math.random() * 30 });
+            next.push({ id: em.nextId(), kind: "emblem", ref: EMBLEM_REGISTRY[Math.floor(Math.random() * EMBLEM_REGISTRY.length)].name, x: 35 + Math.random() * 30, y: 35 + Math.random() * 30 });
         }
-        setPlaced(next);
-        setTextEmblem("");
-        setSelectedId(null);
+        em.resetTo(next);
     };
 
     const handleDownload = async () => {
         if (!exportRef.current) return;
         setExporting(true);
-        // let the ring/handles disappear and the export card paint before capture
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
         try {
             const { default: html2canvas } = await import("html2canvas");
-            const canvas = await html2canvas(exportRef.current, { backgroundColor: null, scale: 3, useCORS: true });
+            const el = exportRef.current;
+            const scale = Math.min(3, CANVAS_MAX_PX / Math.max(el.offsetWidth, el.offsetHeight, 1));
+            const canvas = await html2canvas(el, { backgroundColor: null, scale: Math.max(1, scale), useCORS: true });
             const link = document.createElement("a");
             link.download = `${sanitizeFilename(countryName)}.png`;
             link.href = canvas.toDataURL("image/png");
@@ -263,79 +201,26 @@ export default function CountryMaker() {
             <h1 className="sr-only">Country Maker - design your own country flag</h1>
             <main className="h-full max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[3fr_2fr] gap-4 md:gap-6">
                 <section aria-label="Flag preview" className="h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl overflow-auto">
-                    <div className="h-full min-h-[260px] flex flex-col items-center justify-center gap-4 p-8 md:p-12">
-                        <div
-                            ref={exportRef}
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: exporting ? "22px" : "16px",
-                                padding: exporting ? "34px 40px" : 0,
-                                background: exporting ? "#1b1b1f" : "transparent",
-                                borderRadius: "1.5rem",
-                            }}>
-                            <div
-                                ref={flagRef}
-                                onPointerDown={() => setSelectedId(null)}
-                                style={{
-                                    width: "clamp(260px, 46vw, 540px)",
-                                    aspectRatio: "3 / 2",
-                                    borderRadius: rounded ? "1rem" : "0px",
-                                    overflow: "hidden",
-                                    position: "relative",
-                                    boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
-                                    touchAction: "none",
-                                    ...baseStyle,
-                                }}>
-                                {overlays.map((ov, i) => (
-                                    <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip, zIndex: 1, pointerEvents: "none" }} />
-                                ))}
-                                {placed.map((p) => {
-                                    const isSel = selectedId === p.id && !exporting;
-                                    const wrap: React.CSSProperties = {
-                                        position: "absolute",
-                                        left: `${p.x}%`,
-                                        top: `${p.y}%`,
-                                        transform: "translate(-50%, -50%)",
-                                        zIndex: 2,
-                                        cursor: "grab",
-                                        touchAction: "none",
-                                        lineHeight: 0,
-                                        ...(isSel ? { outline: "2.5px solid #3b82f6", outlineOffset: "5px", borderRadius: "8px" } : {}),
-                                    };
-                                    const paint: React.CSSProperties = { color: emblemColor, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.28))", display: "block", pointerEvents: "none" };
-                                    return (
-                                        <div key={p.id} style={wrap} onPointerDown={(e) => startDrag(e, p.id)} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>
-                                            {p.kind === "text" ? (
-                                                <span style={{ ...paint, fontWeight: 800, fontSize: `${emblemSize * 0.9}px`, lineHeight: 1, whiteSpace: "nowrap" }}>{p.ref}</span>
-                                            ) : (
-                                                renderEmblem(p.ref, { ...paint, width: `${emblemSize}px`, height: `${emblemSize}px` })
-                                            )}
-                                            {isSel && (
-                                                <button
-                                                    aria-label="Remove this emblem"
-                                                    onPointerDown={(e) => e.stopPropagation()}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        removePlaced(p.id);
-                                                    }}
-                                                    style={{ position: "absolute", top: "-14px", right: "-14px", width: "22px", height: "22px", borderRadius: "9999px", background: "#ef4444", color: "#fff", border: "2px solid #1c1c1e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", lineHeight: 1, zIndex: 3, cursor: "pointer" }}>
-                                                    ×
-                                                </button>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Editable country name - tap to rename. Hidden input swaps to plain text on export so the name is baked into the PNG. */}
-                            {exporting
-                                ? countryName.trim() && <div style={{ color: "#e8e8ea", fontWeight: 800, fontSize: "clamp(16px, 2.4vw, 26px)", letterSpacing: "0.02em", textAlign: "center" }}>{countryName}</div>
-                                : <input value={countryName} onChange={(e) => setCountryName(e.target.value)} aria-label="Country name (tap to rename)" placeholder="Tap to name your country" className="w-full text-center bg-transparent border-0 outline-none text-zinc-200 font-bold tracking-wide placeholder:text-zinc-600 focus:text-white" style={{ fontSize: "clamp(16px, 2.4vw, 24px)" }} />}
-                        </div>
-                        {!exporting && <p className="text-[11px] text-zinc-500 text-center">Tap an emblem to select (blue ring), then drag it anywhere. Tap x to remove. Tap the name above to rename.</p>}
-                    </div>
+                    <FlagPreview
+                        flagRef={flagRef}
+                        exportRef={exportRef}
+                        exporting={exporting}
+                        rounded={rounded}
+                        baseStyle={baseStyle}
+                        overlays={overlays}
+                        placed={em.placed}
+                        selectedId={em.selectedId}
+                        emblemColor={emblemColor}
+                        emblemSize={emblemSize}
+                        countryName={countryName}
+                        setCountryName={setCountryName}
+                        onDeselect={() => em.setSelectedId(null)}
+                        startDrag={em.startDrag}
+                        moveDrag={em.moveDrag}
+                        endDrag={em.endDrag}
+                        removePlaced={em.removePlaced}
+                        renderEmblem={(ref, style, key) => renderEmblem(ref, style, key)}
+                    />
                 </section>
 
                 <section className="h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 overflow-hidden flex flex-col">
@@ -349,7 +234,7 @@ export default function CountryMaker() {
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3 block">Flag Layout - {LAYOUTS.length} types</label>
                             <div className="grid grid-cols-2 gap-2">
                                 {LAYOUTS.map((l) => (
-                                    <button key={l.key} onClick={() => setLayout(l.key)} className={cn("px-3 py-2 text-xs rounded-xl border transition text-left", layout === l.key ? "bg-white text-black border-white font-bold" : "border-zinc-700 text-zinc-400 hover:text-zinc-200")}>
+                                    <button key={l.key} onClick={() => setLayout(l.key)} aria-pressed={layout === l.key} className={cn("px-3 py-2 text-xs rounded-xl border transition text-left", layout === l.key ? "bg-white text-black border-white font-bold" : "border-zinc-700 text-zinc-400 hover:text-zinc-200")}>
                                         {l.name}
                                     </button>
                                 ))}
@@ -359,7 +244,7 @@ export default function CountryMaker() {
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Preset Colors</label>
-                                <button onClick={randomize} className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white flex items-center gap-1 transition">
+                                <button onClick={randomize} aria-label="Randomize flag" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white flex items-center gap-1 transition">
                                     <SparklesIcon className="w-3.5 h-3.5" />
                                     Random
                                 </button>
@@ -383,11 +268,11 @@ export default function CountryMaker() {
                                     .slice(0, activeBands)
                                     .map((band) => (
                                         <div key={band.label} className="flex items-center gap-3">
-                                            <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105 shrink-0" style={{ backgroundColor: band.val }}>
-                                                <input type="color" value={band.val} onChange={(e) => band.set(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                            <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105 shrink-0" style={{ backgroundColor: band.val }} title={`${band.label} color`}>
+                                                <input type="color" value={band.val} onChange={(e) => band.set(e.target.value)} aria-label={`${band.label} color`} className="absolute inset-0 opacity-0 cursor-pointer" />
                                             </label>
                                             <span className="text-[10px] uppercase tracking-widest text-zinc-500 w-14 shrink-0">{band.label}</span>
-                                            <input type="text" value={band.val} onChange={(e) => band.set(e.target.value)} className="flex-1 bg-black/40 border border-zinc-800 rounded-xl p-2.5 text-xs font-mono focus:border-zinc-500 outline-none transition" />
+                                            <input type="text" value={band.val} onChange={(e) => band.set(e.target.value)} aria-label={`${band.label} hex value`} className="flex-1 bg-black/40 border border-zinc-800 rounded-xl p-2.5 text-xs font-mono focus:border-zinc-500 outline-none transition" />
                                         </div>
                                     ))}
                             </div>
@@ -396,16 +281,16 @@ export default function CountryMaker() {
                         <div>
                             <div className="flex items-center justify-between mb-1">
                                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Emblems - tap to add, drag on flag</label>
-                                <button onClick={clearAll} className={cn("px-3 py-1 text-[10px] font-bold uppercase rounded-full border transition flex items-center gap-1", placed.length === 0 ? "bg-white text-black border-white" : "border-zinc-700 text-zinc-400 hover:text-zinc-200")}>
+                                <button onClick={em.clearAll} aria-label="Remove all emblems" className={cn("px-3 py-1 text-[10px] font-bold uppercase rounded-full border transition flex items-center gap-1", em.placed.length === 0 ? "bg-white text-black border-white" : "border-zinc-700 text-zinc-400 hover:text-zinc-200")}>
                                     <XMarkIcon className="w-3 h-3" />
                                     None
                                 </button>
                             </div>
-                            <p className="text-[10px] text-zinc-400 mb-3">{placed.length} on flag - drag each one where you want it.</p>
+                            <p className="text-[10px] text-zinc-400 mb-3">{em.placed.length} on flag - drag each one where you want it.</p>
 
                             <div className="flex items-center gap-3 mb-3">
-                                <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105" style={{ backgroundColor: emblemColor }}>
-                                    <input type="color" value={emblemColor} onChange={(e) => setEmblemColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105" style={{ backgroundColor: emblemColor }} title="Emblem color">
+                                    <input type="color" value={emblemColor} onChange={(e) => setEmblemColor(e.target.value)} aria-label="Emblem color" className="absolute inset-0 opacity-0 cursor-pointer" />
                                 </label>
                                 <span className="text-[10px] uppercase tracking-widest text-zinc-500">Emblem color</span>
                             </div>
@@ -419,16 +304,17 @@ export default function CountryMaker() {
                             </div>
 
                             <div className="mb-3">
-                                <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Text / letters (中, 王, USA, ★)</div>
-                                <input value={textEmblem} maxLength={12} placeholder="type letters or characters" onChange={(e) => updateText(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
+                                <label htmlFor="text-emblem" className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2 block">Text / letters (中, 王, USA, ★)</label>
+                                <input id="text-emblem" value={em.textEmblem} maxLength={12} placeholder="type letters or characters" onChange={(e) => em.updateText(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
                             </div>
 
-                            <input value={searchTerm} placeholder="search emblems" onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none mb-3" />
+                            <input value={searchTerm} placeholder="search emblems" aria-label="Search emblems" onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none mb-3" />
                             <div className="mb-3 space-y-2">
-                                <div className="text-[10px] uppercase tracking-widest text-zinc-500">Load by Heroicons name</div>
+                                <label htmlFor="load-emblem" className="text-[10px] uppercase tracking-widest text-zinc-500 block">Load by Heroicons name</label>
                                 <div className="flex gap-2">
                                     <div className="relative flex-1">
                                         <input
+                                            id="load-emblem"
                                             value={emblemName}
                                             placeholder="star"
                                             onChange={(e) => setEmblemName(e.target.value)}
@@ -466,9 +352,9 @@ export default function CountryMaker() {
                             <div className="max-h-[30dvh] overflow-y-auto p-3 bg-black/20 rounded-xl border border-white/5">
                                 <div className="grid grid-cols-6 sm:grid-cols-7 xl:grid-cols-6 gap-2">
                                     {filteredEmblems.map((item) => {
-                                        const onFlag = placed.some((p) => p.ref === item.name);
+                                        const onFlag = em.placed.some((pl) => pl.ref === item.name);
                                         return (
-                                            <button key={item.name} onClick={() => addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("p-2 rounded-lg transition flex justify-center items-center h-9", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "text-zinc-500 hover:text-zinc-300")}>
+                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("p-2 rounded-lg transition flex justify-center items-center h-9", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "text-zinc-500 hover:text-zinc-300")}>
                                                 {renderEmblem(item, { width: 20, height: 20, color: "currentColor" })}
                                             </button>
                                         );
@@ -478,7 +364,7 @@ export default function CountryMaker() {
                         </div>
 
                         <div className="flex items-center justify-end gap-4 pt-1">
-                            <button onClick={() => setRounded((v) => !v)} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase rounded-full border transition", rounded ? "bg-white text-black border-white" : "border-zinc-700 text-zinc-400")}>{rounded ? "Rounded" : "Square"}</button>
+                            <button onClick={() => setRounded((v) => !v)} aria-pressed={rounded} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase rounded-full border transition", rounded ? "bg-white text-black border-white" : "border-zinc-700 text-zinc-400")}>{rounded ? "Rounded" : "Square"}</button>
                         </div>
                     </div>
 
