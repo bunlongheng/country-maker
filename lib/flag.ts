@@ -1,11 +1,7 @@
 // Pure, framework-free flag logic - unit-testable without React.
 import type { CSSProperties } from "react";
 
-export type LayoutKey =
-    | "vertical" | "horizontal" | "vertical-bi" | "horizontal-bi"
-    | "nordic" | "saltire" | "diagonal" | "chevron"
-    | "disc" | "canton" | "quadrant" | "solid"
-    | "stripes" | "star-stripes";
+export type LayoutKey = "vertical" | "horizontal" | "vertical-bi" | "horizontal-bi" | "nordic" | "saltire" | "diagonal" | "chevron" | "disc" | "canton" | "quadrant" | "solid" | "stripes" | "star-stripes";
 
 export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "vertical", name: "Vertical Tricolor", bands: 3 },
@@ -76,7 +72,13 @@ export function bandsForLayout(layout: LayoutKey): number {
 
 /** Turn a country name into a safe PNG filename. */
 export function sanitizeFilename(name: string): string {
-    return (name || "flag").toLowerCase().replace(/[^a-z0-9-]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "flag";
+    return (
+        (name || "flag")
+            .toLowerCase()
+            .replace(/[^a-z0-9-]/gi, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "") || "flag"
+    );
 }
 
 /** Add item if absent, remove if present. Pure - returns a new array. */

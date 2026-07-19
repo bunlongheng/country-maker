@@ -6,7 +6,11 @@ export type FlagEmblem = { name: string; slug: string; svg: string };
 
 // Sol de Mayo style sun: alternating long/short triangular rays around a disc.
 function buildSun(): string {
-    const cx = 50, cy = 50, r1 = 19, discR = 20, N = 16;
+    const cx = 50,
+        cy = 50,
+        r1 = 19,
+        discR = 20,
+        N = 16;
     let rays = "";
     for (let i = 0; i < N * 2; i++) {
         const a = (i / (N * 2)) * Math.PI * 2;
@@ -21,8 +25,7 @@ function buildSun(): string {
     return `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${rays}"/><circle cx="${cx}" cy="${cy}" r="${discR}"/></svg>`;
 }
 
-const wrap = (viewBox: string, d: string) =>
-    `<svg viewBox="${viewBox}" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
+const wrap = (viewBox: string, d: string) => `<svg viewBox="${viewBox}" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
 
 // Stylized 5-tower temple silhouette (Angkor Wat, Cambodia). Central lotus-bud
 // tower flanked by two mid and two outer towers over a stepped base.
@@ -31,14 +34,7 @@ function buildTemple(): string {
         const midY = (shoulderY + tipY) / 2;
         return `M${cx - w / 2} ${baseY} L${cx - w / 2} ${shoulderY} Q${cx - w / 2} ${midY} ${cx} ${tipY} Q${cx + w / 2} ${midY} ${cx + w / 2} ${shoulderY} L${cx + w / 2} ${baseY} Z`;
     };
-    const d =
-        tower(50, 17, 72, 38, 12) +
-        tower(29, 13, 72, 46, 24) +
-        tower(71, 13, 72, 46, 24) +
-        tower(14, 10, 72, 54, 36) +
-        tower(86, 10, 72, 54, 36) +
-        "M8 70 L92 70 L92 79 L8 79 Z" +
-        "M3 79 L97 79 L97 88 L3 88 Z";
+    const d = tower(50, 17, 72, 38, 12) + tower(29, 13, 72, 46, 24) + tower(71, 13, 72, 46, 24) + tower(14, 10, 72, 54, 36) + tower(86, 10, 72, 54, 36) + "M8 70 L92 70 L92 79 L8 79 Z" + "M3 79 L97 79 L97 88 L3 88 Z";
     return `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
 }
 
@@ -66,10 +62,7 @@ export const FLAG_EMBLEMS: FlagEmblem[] = [
     {
         name: "Star",
         slug: "star-solid",
-        svg: wrap(
-            "0 0 576 512",
-            "M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z",
-        ),
+        svg: wrap("0 0 576 512", "M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"),
     },
     {
         name: "Crown",
@@ -82,10 +75,7 @@ export const FLAG_EMBLEMS: FlagEmblem[] = [
     {
         name: "Shield",
         slug: "shield-solid",
-        svg: wrap(
-            "0 0 512 512",
-            "M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z",
-        ),
+        svg: wrap("0 0 512 512", "M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z"),
     },
     {
         name: "Maple",

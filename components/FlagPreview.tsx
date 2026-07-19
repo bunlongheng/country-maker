@@ -36,7 +36,8 @@ export function FlagPreview(p: Props) {
                     padding: p.exporting ? "34px 40px" : 0,
                     background: p.exporting ? "#1b1b1f" : "transparent",
                     borderRadius: "1.5rem",
-                }}>
+                }}
+            >
                 <div
                     ref={p.flagRef}
                     onPointerDown={p.onDeselect}
@@ -49,7 +50,8 @@ export function FlagPreview(p: Props) {
                         boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
                         touchAction: "none",
                         ...p.baseStyle,
-                    }}>
+                    }}
+                >
                     {p.overlays.map((ov, i) => (
                         <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip, zIndex: 1, pointerEvents: "none" }} />
                     ))}
@@ -69,11 +71,7 @@ export function FlagPreview(p: Props) {
                         const paint: React.CSSProperties = { color: p.emblemColor, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.28))", display: "block", pointerEvents: "none" };
                         return (
                             <div key={it.id} style={wrap} onPointerDown={(e) => p.startDrag(e, it.id)} onPointerMove={p.moveDrag} onPointerUp={p.endDrag} onPointerCancel={p.endDrag}>
-                                {it.kind === "text" ? (
-                                    <span style={{ ...paint, fontWeight: 800, fontSize: `${p.emblemSize * 0.9}px`, lineHeight: 1, whiteSpace: "nowrap" }}>{it.ref}</span>
-                                ) : (
-                                    p.renderEmblem(it.ref, { ...paint, width: `${p.emblemSize}px`, height: `${p.emblemSize}px` })
-                                )}
+                                {it.kind === "text" ? <span style={{ ...paint, fontWeight: 800, fontSize: `${p.emblemSize * 0.9}px`, lineHeight: 1, whiteSpace: "nowrap" }}>{it.ref}</span> : p.renderEmblem(it.ref, { ...paint, width: `${p.emblemSize}px`, height: `${p.emblemSize}px` })}
                                 {isSel && (
                                     <button
                                         aria-label="Remove this emblem"
@@ -82,7 +80,8 @@ export function FlagPreview(p: Props) {
                                             e.stopPropagation();
                                             p.removePlaced(it.id);
                                         }}
-                                        style={{ position: "absolute", top: "-14px", right: "-14px", width: "22px", height: "22px", borderRadius: "9999px", background: "#ef4444", color: "#fff", border: "2px solid #1c1c1e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", lineHeight: 1, zIndex: 3, cursor: "pointer" }}>
+                                        style={{ position: "absolute", top: "-14px", right: "-14px", width: "22px", height: "22px", borderRadius: "9999px", background: "#ef4444", color: "#fff", border: "2px solid #1c1c1e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", lineHeight: 1, zIndex: 3, cursor: "pointer" }}
+                                    >
                                         ×
                                     </button>
                                 )}
