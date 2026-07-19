@@ -93,10 +93,10 @@ export function FlagPreview(p: Props) {
                 {p.exporting ? (
                     p.countryName.trim() && <div style={{ color: "#e8e8ea", fontWeight: 800, fontSize: "clamp(16px, 2.4vw, 26px)", letterSpacing: "0.02em", textAlign: "center" }}>{p.countryName}</div>
                 ) : (
-                    <input value={p.countryName} onChange={(e) => p.setCountryName(e.target.value)} aria-label="Country name (tap to rename)" placeholder="Tap to name your country" className="w-full text-center bg-transparent border-0 outline-none text-zinc-200 font-bold tracking-wide placeholder:text-zinc-600 focus:text-white" style={{ fontSize: "clamp(16px, 2.4vw, 24px)" }} />
+                    <input value={p.countryName} onChange={(e) => p.setCountryName(e.target.value)} aria-label="Country name (tap to rename)" placeholder="Tap to name your country" className="w-full text-center bg-transparent border-0 outline-none text-zinc-200 font-bold tracking-wide placeholder:text-zinc-400 focus:text-white" style={{ fontSize: "clamp(16px, 2.4vw, 24px)" }} />
                 )}
             </div>
-            {!p.exporting && <p className="text-[11px] text-zinc-500 text-center">Tap an emblem to select (blue ring), then drag it anywhere. Tap x to remove. Tap the name above to rename.</p>}
+            {!p.exporting && <p className="text-[11px] text-zinc-400 text-center">Tap an emblem to select (blue ring), then drag it anywhere. Tap x to remove. Tap the name above to rename.</p>}
         </div>
     );
 }

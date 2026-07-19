@@ -112,9 +112,9 @@ export default function CountryMaker() {
         if (idx === -1) return value;
         return (
             <>
-                <span className="text-zinc-500">{value.slice(0, idx)}</span>
+                <span className="text-zinc-400">{value.slice(0, idx)}</span>
                 <span className="text-white">{value.slice(idx, idx + query.length)}</span>
-                <span className="text-zinc-500">{value.slice(idx + query.length)}</span>
+                <span className="text-zinc-400">{value.slice(idx + query.length)}</span>
             </>
         );
     };
@@ -235,14 +235,14 @@ export default function CountryMaker() {
                 <section className="h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 overflow-hidden flex flex-col">
                     <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6" role="group" aria-label="Flag controls">
                         <div>
-                            <label htmlFor="country-name" className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3 block">
+                            <label htmlFor="country-name" className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 block">
                                 Country Name (or tap the name under the flag)
                             </label>
                             <input id="country-name" value={countryName} placeholder="Republic of ..." onChange={(e) => setCountryName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
                         </div>
 
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3 block">Flag Layout - {LAYOUTS.length} types</label>
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 block">Flag Layout - {LAYOUTS.length} types</label>
                             <div className="grid grid-cols-2 gap-2">
                                 {LAYOUTS.map((l) => (
                                     <button key={l.key} onClick={() => setLayout(l.key)} aria-pressed={layout === l.key} className={cn("px-3 py-2 text-xs rounded-xl border transition text-left", layout === l.key ? "bg-white text-black border-white font-bold" : "border-zinc-700 text-zinc-400 hover:text-zinc-200")}>
@@ -254,7 +254,7 @@ export default function CountryMaker() {
 
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Preset Colors</div>
+                                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Preset Colors</div>
                                 <button onClick={randomize} aria-label="Randomize flag" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white flex items-center gap-1 transition">
                                     <SparklesIcon className="w-3.5 h-3.5" />
                                     Random
@@ -276,7 +276,7 @@ export default function CountryMaker() {
                         </div>
 
                         <div>
-                            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3 block">Band Colors</div>
+                            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 block">Band Colors</div>
                             <div className="space-y-2.5">
                                 {[
                                     { val: c1, set: setC1, label: "Band 1" },
@@ -289,7 +289,7 @@ export default function CountryMaker() {
                                             <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105 shrink-0" style={{ backgroundColor: band.val }} title={`${band.label} color`}>
                                                 <input type="color" value={band.val} onChange={(e) => band.set(e.target.value)} aria-label={`${band.label} color`} className="absolute inset-0 opacity-0 cursor-pointer" />
                                             </label>
-                                            <span className="text-[10px] uppercase tracking-widest text-zinc-500 w-14 shrink-0">{band.label}</span>
+                                            <span className="text-[10px] uppercase tracking-widest text-zinc-400 w-14 shrink-0">{band.label}</span>
                                             <input type="text" value={band.val} onChange={(e) => band.set(e.target.value)} aria-label={`${band.label} hex value`} className="flex-1 bg-black/40 border border-zinc-800 rounded-xl p-2.5 text-xs font-mono focus:border-zinc-500 outline-none transition" />
                                         </div>
                                     ))}
@@ -298,7 +298,7 @@ export default function CountryMaker() {
 
                         <div>
                             <div className="flex items-center justify-between mb-1">
-                                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Emblems - tap to add, drag on flag</div>
+                                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Emblems - tap to add, drag on flag</div>
                                 <button onClick={em.clearAll} aria-label="Remove all emblems" className={cn("px-3 py-1 text-[10px] font-bold uppercase rounded-full border transition flex items-center gap-1", em.placed.length === 0 ? "bg-white text-black border-white" : "border-zinc-700 text-zinc-400 hover:text-zinc-200")}>
                                     <XMarkIcon className="w-3 h-3" />
                                     None
@@ -310,12 +310,12 @@ export default function CountryMaker() {
                                 <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105" style={{ backgroundColor: emblemColor }} title="Emblem color">
                                     <input type="color" value={emblemColor} onChange={(e) => setEmblemColor(e.target.value)} aria-label="Emblem color" className="absolute inset-0 opacity-0 cursor-pointer" />
                                 </label>
-                                <span className="text-[10px] uppercase tracking-widest text-zinc-500">Emblem color</span>
+                                <span className="text-[10px] uppercase tracking-widest text-zinc-400">Emblem color</span>
                             </div>
 
                             <div className="mb-3">
                                 <div className="flex items-center justify-between mb-2">
-                                    <label htmlFor="emblem-size" className="text-[10px] uppercase tracking-widest text-zinc-500">
+                                    <label htmlFor="emblem-size" className="text-[10px] uppercase tracking-widest text-zinc-400">
                                         Emblem size
                                     </label>
                                     <span className="text-[10px] font-mono text-zinc-400 tabular-nums">{emblemSize}px</span>
@@ -324,7 +324,7 @@ export default function CountryMaker() {
                             </div>
 
                             <div className="mb-3">
-                                <label htmlFor="text-emblem" className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2 block">
+                                <label htmlFor="text-emblem" className="text-[10px] uppercase tracking-widest text-zinc-400 mb-2 block">
                                     Text / letters (中, 王, USA, ★)
                                 </label>
                                 <input id="text-emblem" value={em.textEmblem} maxLength={12} placeholder="type letters or characters" onChange={(e) => em.updateText(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
@@ -332,7 +332,7 @@ export default function CountryMaker() {
 
                             <input value={searchTerm} placeholder="search emblems" aria-label="Search emblems" onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none mb-3" />
                             <div className="mb-3 space-y-2">
-                                <label htmlFor="load-emblem" className="text-[10px] uppercase tracking-widest text-zinc-500 block">
+                                <label htmlFor="load-emblem" className="text-[10px] uppercase tracking-widest text-zinc-400 block">
                                     Load by Heroicons name
                                 </label>
                                 <div className="flex gap-2">
@@ -369,7 +369,7 @@ export default function CountryMaker() {
                                         {customEmblemLoading ? "..." : "Add"}
                                     </button>
                                 </div>
-                                <div className="text-[10px] text-zinc-500">
+                                <div className="text-[10px] text-zinc-400">
                                     Need names?{" "}
                                     <a href="https://heroicons.com/" target="_blank" rel="noreferrer" className="text-zinc-300 underline underline-offset-2 hover:text-white">
                                         heroicons.com
@@ -382,7 +382,7 @@ export default function CountryMaker() {
                                     {filteredEmblems.map((item) => {
                                         const onFlag = em.placed.some((pl) => pl.ref === item.name);
                                         return (
-                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("p-2 rounded-lg transition flex justify-center items-center h-9", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "text-zinc-500 hover:text-zinc-300")}>
+                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("p-2 rounded-lg transition flex justify-center items-center h-9", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "text-zinc-400 hover:text-zinc-300")}>
                                                 {renderEmblem(item, { width: 20, height: 20, color: "currentColor" })}
                                             </button>
                                         );
