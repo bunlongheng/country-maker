@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
+
+const fankids = localFont({ src: "../public/fonts/FanKids.ttf", variable: "--font-fankids", display: "swap" });
 
 export const metadata: Metadata = {
     title: "Country Maker - Design your own flag",
@@ -20,7 +23,7 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
+        <html lang="en" className={fankids.variable}>
             <body>{children}</body>
         </html>
     );

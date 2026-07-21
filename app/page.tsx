@@ -211,11 +211,13 @@ export default function CountryMaker() {
                 *::-webkit-scrollbar-thumb:hover { background: #4a4a55; }
             `}</style>
             <h1 className="sr-only">Country Maker - design your own country flag</h1>
-            <main className="h-full max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[3fr_2fr] gap-4 md:gap-6">
+            <main className="h-full max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
                 <section aria-label="Flag preview" className="relative h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl overflow-auto">
                     <div className="absolute top-5 left-6 md:top-6 md:left-8 z-10 flex items-center gap-2 pointer-events-none">
-                        <GlobeAltIcon className="w-5 h-5 text-zinc-400" />
-                        <span className="text-sm font-bold uppercase tracking-[0.22em] text-zinc-300">Country Maker</span>
+                        <GlobeAltIcon className="w-6 h-6 text-zinc-400" />
+                        <span className="text-2xl md:text-3xl text-zinc-100" style={{ fontFamily: "var(--font-fankids)" }}>
+                            Country Maker
+                        </span>
                     </div>
                     <FlagPreview
                         flagRef={flagRef}
@@ -244,25 +246,25 @@ export default function CountryMaker() {
                     <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6" role="group" aria-label="Flag controls">
                         <div>
                             <label htmlFor="country-name" className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 block">
-                                Country Name (or tap the name under the flag)
+                                Country Name (used for the download filename)
                             </label>
                             <input id="country-name" value={countryName} placeholder="Republic of ..." onChange={(e) => setCountryName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
                         </div>
 
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 block">Flag Layout - {LAYOUTS.length} types</label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                                 {LAYOUTS.map((l) => {
                                     const mini = buildFlagStyle(l.key, c1, c2, c3);
                                     const active = layout === l.key;
                                     return (
-                                        <button key={l.key} onClick={() => setLayout(l.key)} aria-pressed={active} className={cn("p-1.5 rounded-xl border transition flex flex-col items-center gap-1.5", active ? "bg-white border-white" : "border-zinc-700 hover:border-zinc-500")}>
-                                            <div className="relative w-full rounded-md overflow-hidden ring-1 ring-black/10" style={{ aspectRatio: "3 / 2", ...mini.baseStyle }}>
+                                        <button key={l.key} onClick={() => setLayout(l.key)} aria-pressed={active} title={l.name} className={cn("p-1 rounded-lg border transition flex flex-col items-center gap-1", active ? "bg-white border-white" : "border-zinc-700 hover:border-zinc-500")}>
+                                            <div className="relative w-full rounded overflow-hidden ring-1 ring-black/10" style={{ aspectRatio: "3 / 2", ...mini.baseStyle }}>
                                                 {mini.overlays.map((ov, i) => (
                                                     <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip }} />
                                                 ))}
                                             </div>
-                                            <span className={cn("text-[10px] leading-tight text-center", active ? "text-black font-bold" : "text-zinc-400")}>{l.name}</span>
+                                            <span className={cn("text-[9px] leading-tight text-center", active ? "text-black font-bold" : "text-zinc-400")}>{l.name}</span>
                                         </button>
                                     );
                                 })}
