@@ -58,12 +58,7 @@ export function FlagPreview(p: Props) {
                     ))}
                     {!p.exporting &&
                         p.bands.map((b, i) => (
-                            <label
-                                key={i}
-                                title="Tap to change this color"
-                                onPointerDown={(e) => e.stopPropagation()}
-                                style={{ position: "absolute", left: `${b.x}%`, top: `${b.y}%`, transform: "translate(-50%, -50%)", width: "26px", height: "26px", borderRadius: "9999px", background: b.color, border: "2px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,0.45)", zIndex: 2, cursor: "pointer" }}
-                            >
+                            <label key={i} title="Tap to change this color" onPointerDown={(e) => e.stopPropagation()} style={{ position: "absolute", left: `${b.x}%`, top: `${b.y}%`, transform: "translate(-50%, -50%)", width: "26px", height: "26px", borderRadius: "9999px", background: b.color, border: "2px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,0.45)", zIndex: 2, cursor: "pointer" }}>
                                 <input type="color" value={b.color} onChange={(e) => b.set(e.target.value)} aria-label={`Change band ${i + 1} color`} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }} />
                             </label>
                         ))}
@@ -105,7 +100,14 @@ export function FlagPreview(p: Props) {
                 {p.exporting ? (
                     p.countryName.trim() && <div style={{ color: "#e8e8ea", fontWeight: 800, fontSize: "clamp(16px, 2.4vw, 26px)", letterSpacing: "0.02em", textAlign: "center" }}>{p.countryName}</div>
                 ) : (
-                    <input value={p.countryName} onChange={(e) => p.setCountryName(e.target.value)} aria-label="Country name (tap to rename)" placeholder="Tap to name your country" className="w-full text-center border-0 outline-none text-zinc-200 font-bold tracking-wide placeholder:text-zinc-400 focus:text-white" style={{ fontSize: "clamp(16px, 2.4vw, 24px)", appearance: "none", WebkitAppearance: "none", background: "transparent" }} />
+                    <input
+                        value={p.countryName}
+                        onChange={(e) => p.setCountryName(e.target.value)}
+                        aria-label="Country name (tap to rename)"
+                        placeholder="Tap to name your country"
+                        className="w-full text-center border-0 outline-none text-zinc-200 font-bold tracking-wide placeholder:text-zinc-400 focus:text-white"
+                        style={{ fontSize: "clamp(16px, 2.4vw, 24px)", appearance: "none", WebkitAppearance: "none", background: "transparent" }}
+                    />
                 )}
             </div>
         </div>

@@ -212,7 +212,11 @@ export default function CountryMaker() {
             `}</style>
             <h1 className="sr-only">Country Maker - design your own country flag</h1>
             <main className="h-full max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[3fr_2fr] gap-4 md:gap-6">
-                <section aria-label="Flag preview" className="h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl overflow-auto">
+                <section aria-label="Flag preview" className="relative h-full bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl overflow-auto">
+                    <div className="absolute top-5 left-6 md:top-6 md:left-8 z-10 flex items-center gap-2 pointer-events-none">
+                        <GlobeAltIcon className="w-5 h-5 text-zinc-400" />
+                        <span className="text-sm font-bold uppercase tracking-[0.22em] text-zinc-300">Country Maker</span>
+                    </div>
                     <FlagPreview
                         flagRef={flagRef}
                         exportRef={exportRef}
