@@ -70,6 +70,40 @@ export function bandsForLayout(layout: LayoutKey): number {
     return LAYOUTS.find((l) => l.key === layout)?.bands ?? 3;
 }
 
+/** Where to place the tap-to-recolor dots on the flag. Index i -> band color c(i+1). Pure. */
+export function bandHotspots(layout: LayoutKey): { x: number; y: number }[] {
+    switch (layout) {
+        case "vertical":
+            return [{ x: 16, y: 50 }, { x: 50, y: 50 }, { x: 84, y: 50 }];
+        case "horizontal":
+            return [{ x: 50, y: 16 }, { x: 50, y: 50 }, { x: 50, y: 84 }];
+        case "vertical-bi":
+            return [{ x: 25, y: 50 }, { x: 75, y: 50 }];
+        case "horizontal-bi":
+            return [{ x: 50, y: 25 }, { x: 50, y: 75 }];
+        case "stripes":
+            return [{ x: 50, y: 12 }, { x: 50, y: 20 }];
+        case "star-stripes":
+            return [{ x: 70, y: 15 }, { x: 70, y: 23 }, { x: 20, y: 25 }];
+        case "nordic":
+            return [{ x: 16, y: 22 }, { x: 32, y: 50 }];
+        case "saltire":
+            return [{ x: 16, y: 16 }, { x: 50, y: 50 }];
+        case "diagonal":
+            return [{ x: 75, y: 25 }, { x: 25, y: 75 }];
+        case "chevron":
+            return [{ x: 78, y: 50 }, { x: 12, y: 50 }];
+        case "disc":
+            return [{ x: 16, y: 16 }, { x: 50, y: 50 }];
+        case "canton":
+            return [{ x: 20, y: 25 }, { x: 75, y: 25 }, { x: 75, y: 75 }];
+        case "quadrant":
+            return [{ x: 25, y: 25 }, { x: 75, y: 25 }];
+        default:
+            return [{ x: 50, y: 50 }];
+    }
+}
+
 /** Turn a country name into a safe PNG filename. */
 export function sanitizeFilename(name: string): string {
     return (

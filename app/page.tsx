@@ -1,6 +1,6 @@
 "use client";
 import { FLAG_EMBLEMS } from "@/lib/flagEmblems";
-import { LAYOUTS, buildFlagStyle, bandsForLayout, sanitizeFilename, sanitizeSvg, type LayoutKey, type Placed } from "@/lib/flag";
+import { LAYOUTS, buildFlagStyle, bandsForLayout, bandHotspots, sanitizeFilename, sanitizeSvg, type LayoutKey, type Placed } from "@/lib/flag";
 import { useEmblems } from "@/lib/useEmblems";
 import { FlagPreview } from "@/components/FlagPreview";
 
@@ -77,7 +77,7 @@ export default function CountryMaker() {
     const [emblemColor, setEmblemColor] = useState("#F5A623");
     const [emblemSize, setEmblemSize] = useState(EMBLEM_SIZE_DEFAULT);
     const [exporting, setExporting] = useState(false);
-    const [rounded, setRounded] = useState(true);
+    const [rounded, setRounded] = useState(false);
 
     const emblemEntryBySlug = useMemo(() => new Map(EMBLEM_REGISTRY.map((item) => [item.slug, item])), []);
     const emblemEntryByName = useMemo(() => new Map(EMBLEM_REGISTRY.map((item) => [item.name, item])), []);
@@ -93,6 +93,9 @@ export default function CountryMaker() {
 
     const activeBands = bandsForLayout(layout);
     const { baseStyle, overlays } = useMemo(() => buildFlagStyle(layout, c1, c2, c3), [layout, c1, c2, c3]);
+    const bandSetters = [setC1, setC2, setC3];
+    const bandVals = [c1, c2, c3];
+    const flagBands = bandHotspots(layout).map((h, i) => ({ color: bandVals[i], set: bandSetters[i], x: h.x, y: h.y }));
 
     const normalizeEmblemName = (raw: string) =>
         raw
@@ -217,6 +220,7 @@ export default function CountryMaker() {
                         rounded={rounded}
                         baseStyle={baseStyle}
                         overlays={overlays}
+                        bands={flagBands}
                         placed={em.placed}
                         selectedId={em.selectedId}
                         emblemColor={emblemColor}
@@ -243,12 +247,21 @@ export default function CountryMaker() {
 
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 block">Flag Layout - {LAYOUTS.length} types</label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {LAYOUTS.map((l) => (
-                                    <button key={l.key} onClick={() => setLayout(l.key)} aria-pressed={layout === l.key} className={cn("px-3 py-2 text-xs rounded-xl border transition text-left", layout === l.key ? "bg-white text-black border-white font-bold" : "border-zinc-700 text-zinc-400 hover:text-zinc-200")}>
-                                        {l.name}
-                                    </button>
-                                ))}
+                            <div className="grid grid-cols-3 gap-2">
+                                {LAYOUTS.map((l) => {
+                                    const mini = buildFlagStyle(l.key, c1, c2, c3);
+                                    const active = layout === l.key;
+                                    return (
+                                        <button key={l.key} onClick={() => setLayout(l.key)} aria-pressed={active} className={cn("p-1.5 rounded-xl border transition flex flex-col items-center gap-1.5", active ? "bg-white border-white" : "border-zinc-700 hover:border-zinc-500")}>
+                                            <div className="relative w-full rounded-md overflow-hidden ring-1 ring-black/10" style={{ aspectRatio: "3 / 2", ...mini.baseStyle }}>
+                                                {mini.overlays.map((ov, i) => (
+                                                    <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip }} />
+                                                ))}
+                                            </div>
+                                            <span className={cn("text-[10px] leading-tight text-center", active ? "text-black font-bold" : "text-zinc-400")}>{l.name}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
