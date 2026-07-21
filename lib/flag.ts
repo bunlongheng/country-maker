@@ -1,7 +1,7 @@
 // Pure, framework-free flag logic - unit-testable without React.
 import type { CSSProperties } from "react";
 
-export type LayoutKey = "vertical" | "horizontal" | "vertical-bi" | "horizontal-bi" | "nordic" | "saltire" | "diagonal" | "chevron" | "disc" | "canton" | "quadrant" | "solid" | "stripes" | "star-stripes";
+export type LayoutKey = "vertical" | "horizontal" | "vertical-bi" | "horizontal-bi" | "nordic" | "saltire" | "diagonal" | "chevron" | "disc" | "canton" | "quadrant" | "solid" | "stripes" | "star-stripes" | "v-stripes" | "pale" | "fess" | "cross" | "border" | "bend" | "diamond";
 
 export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "vertical", name: "Vertical Tricolor", bands: 3 },
@@ -18,6 +18,13 @@ export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "canton", name: "Canton + Field", bands: 3 },
     { key: "quadrant", name: "Quadrants", bands: 2 },
     { key: "solid", name: "Solid", bands: 1 },
+    { key: "v-stripes", name: "Vertical Stripes", bands: 2 },
+    { key: "pale", name: "Center Pale", bands: 2 },
+    { key: "fess", name: "Center Fess", bands: 2 },
+    { key: "cross", name: "Centered Cross", bands: 2 },
+    { key: "border", name: "Bordered", bands: 2 },
+    { key: "bend", name: "Diagonal Bend", bands: 2 },
+    { key: "diamond", name: "Diamond", bands: 2 },
 ];
 
 export type FlagStyle = { baseStyle: CSSProperties; overlays: { clip: string; color: string }[] };
@@ -60,6 +67,20 @@ export function buildFlagStyle(layout: LayoutKey, c1: string, c2: string, c3: st
             };
         case "chevron":
             return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(0% 0%, 48% 50%, 0% 100%)", color: c2 }] };
+        case "v-stripes":
+            return { baseStyle: { background: `repeating-linear-gradient(to right, ${c1} 0 7.6923%, ${c2} 7.6923% 15.3846%)` }, overlays: [] };
+        case "pale":
+            return { baseStyle: { background: `linear-gradient(${c2}, ${c2}) 50% 0 / 33.34% 100% no-repeat, ${c1}` }, overlays: [] };
+        case "fess":
+            return { baseStyle: { background: `linear-gradient(${c2}, ${c2}) 0 50% / 100% 33.34% no-repeat, ${c1}` }, overlays: [] };
+        case "cross":
+            return { baseStyle: { background: `linear-gradient(${c2}, ${c2}) 0 50% / 100% 22% no-repeat, linear-gradient(${c2}, ${c2}) 50% 0 / 16% 100% no-repeat, ${c1}` }, overlays: [] };
+        case "border":
+            return { baseStyle: { background: `linear-gradient(${c1}, ${c1}) 50% 50% / 80% 70% no-repeat, ${c2}` }, overlays: [] };
+        case "bend":
+            return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(0% 0%, 22% 0%, 100% 78%, 100% 100%, 78% 100%, 0% 22%)", color: c2 }] };
+        case "diamond":
+            return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(50% 8%, 92% 50%, 50% 92%, 8% 50%)", color: c2 }] };
         default:
             return { baseStyle: { background: c1 }, overlays: [] };
     }
@@ -141,6 +162,41 @@ export function bandHotspots(layout: LayoutKey): { x: number; y: number }[] {
             return [
                 { x: 25, y: 25 },
                 { x: 75, y: 25 },
+            ];
+        case "v-stripes":
+            return [
+                { x: 8, y: 50 },
+                { x: 16, y: 50 },
+            ];
+        case "pale":
+            return [
+                { x: 16, y: 50 },
+                { x: 50, y: 50 },
+            ];
+        case "fess":
+            return [
+                { x: 16, y: 16 },
+                { x: 50, y: 50 },
+            ];
+        case "cross":
+            return [
+                { x: 16, y: 20 },
+                { x: 50, y: 50 },
+            ];
+        case "border":
+            return [
+                { x: 50, y: 50 },
+                { x: 6, y: 50 },
+            ];
+        case "bend":
+            return [
+                { x: 78, y: 22 },
+                { x: 40, y: 62 },
+            ];
+        case "diamond":
+            return [
+                { x: 14, y: 14 },
+                { x: 50, y: 50 },
             ];
         default:
             return [{ x: 50, y: 50 }];

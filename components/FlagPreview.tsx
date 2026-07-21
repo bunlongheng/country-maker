@@ -9,7 +9,9 @@ type Props = {
     rounded: boolean;
     baseStyle: React.CSSProperties;
     overlays: { clip: string; color: string }[];
-    bands: { color: string; set: (v: string) => void; x: number; y: number }[];
+    bands: { x: number; y: number }[];
+    activeBand: number | null;
+    onPickBand: (i: number) => void;
     placed: Placed[];
     selectedId: string | null;
     emblemColor: string;
@@ -57,11 +59,45 @@ export function FlagPreview(p: Props) {
                         <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip, zIndex: 1, pointerEvents: "none" }} />
                     ))}
                     {!p.exporting &&
-                        p.bands.map((b, i) => (
-                            <label key={i} title="Tap to change this color" onPointerDown={(e) => e.stopPropagation()} style={{ position: "absolute", left: `${b.x}%`, top: `${b.y}%`, transform: "translate(-50%, -50%)", width: "26px", height: "26px", borderRadius: "9999px", background: b.color, border: "2px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,0.45)", zIndex: 2, cursor: "pointer" }}>
-                                <input type="color" value={b.color} onChange={(e) => b.set(e.target.value)} aria-label={`Change band ${i + 1} color`} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }} />
-                            </label>
-                        ))}
+                        p.bands.map((b, i) => {
+                            const active = p.activeBand === i;
+                            return (
+                                <button
+                                    key={i}
+                                    aria-label={`Pick band ${i + 1} color`}
+                                    aria-pressed={active}
+                                    title="Tap this part, then pick its color in the panel"
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        p.onPickBand(i);
+                                    }}
+                                    style={{
+                                        position: "absolute",
+                                        left: `${b.x}%`,
+                                        top: `${b.y}%`,
+                                        transform: "translate(-50%, -50%)",
+                                        width: "24%",
+                                        height: "30%",
+                                        background: active ? "rgba(59,130,246,0.15)" : "transparent",
+                                        border: "none",
+                                        borderRadius: "10px",
+                                        zIndex: 2,
+                                        cursor: "pointer",
+                                        outline: active ? "3px solid #3b82f6" : "2px solid transparent",
+                                        outlineOffset: "2px",
+                                        boxShadow: active ? "0 0 0 6px rgba(59,130,246,0.18)" : "none",
+                                        transition: "outline-color 0.12s, background 0.12s",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!active) e.currentTarget.style.outlineColor = "rgba(59,130,246,0.55)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!active) e.currentTarget.style.outlineColor = "transparent";
+                                    }}
+                                />
+                            );
+                        })}
                     {p.placed.map((it) => {
                         const isSel = p.selectedId === it.id && !p.exporting;
                         const wrap: React.CSSProperties = {

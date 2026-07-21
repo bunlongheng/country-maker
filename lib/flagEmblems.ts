@@ -38,8 +38,30 @@ function buildTemple(): string {
     return `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
 }
 
+// Compass "north star": a sharp 4-point star with smaller diagonal points.
+function buildNorthStar(): string {
+    const cx = 50,
+        cy = 50;
+    const star = (pts: number, rO: number, rI: number, rot: number) => {
+        let d = "";
+        for (let i = 0; i < pts * 2; i++) {
+            const a = rot + (i * Math.PI) / pts;
+            const r = i % 2 === 0 ? rO : rI;
+            d += `${i === 0 ? "M" : "L"}${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)} `;
+        }
+        return d + "Z ";
+    };
+    const up = -Math.PI / 2;
+    return `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${star(4, 48, 9, up) + star(4, 24, 7, up + Math.PI / 4)}"/></svg>`;
+}
+
 export const FLAG_EMBLEMS: FlagEmblem[] = [
     { name: "Sun", slug: "sun-rays", svg: buildSun() },
+    { name: "Nordic Cross", slug: "nordic-cross", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0 40 H100 V60 H0 Z M26 0 H46 V100 H26 Z"/></svg>` },
+    { name: "North Star", slug: "north-star", svg: buildNorthStar() },
+    { name: "Fir Tree", slug: "fir-tree", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M50 8 L64 40 L36 40 Z M50 30 L74 64 L26 64 Z M50 54 L84 88 L16 88 Z M44 88 L56 88 L56 97 L44 97 Z"/></svg>` },
+    { name: "Hammer", slug: "mjolnir", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M42 6 H58 V20 H42 Z M47 18 H53 V56 H47 Z M20 52 H80 V66 H20 Z M20 52 H34 V90 H20 Z M66 52 H80 V90 H66 Z"/></svg>` },
+    { name: "Sun Cross", slug: "sun-cross", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="9"/><path d="M45.5 8 H54.5 V92 H45.5 Z M8 45.5 H92 V54.5 H8 Z"/></svg>` },
     { name: "Temple", slug: "angkor-wat", svg: buildTemple() },
     { name: "Triangle", slug: "triangle", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M50 12 L88 84 L12 84 Z"/></svg>` },
     {

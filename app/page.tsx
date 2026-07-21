@@ -10,20 +10,9 @@ import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
 import SparklesIcon from "@heroicons/react/24/outline/SparklesIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import StarIcon from "@heroicons/react/24/outline/StarIcon";
-import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import MoonIcon from "@heroicons/react/24/outline/MoonIcon";
-import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
-import FireIcon from "@heroicons/react/24/outline/FireIcon";
-import ShieldCheckIcon from "@heroicons/react/24/outline/ShieldCheckIcon";
 import GlobeAltIcon from "@heroicons/react/24/outline/GlobeAltIcon";
 import HeartIcon from "@heroicons/react/24/outline/HeartIcon";
-import KeyIcon from "@heroicons/react/24/outline/KeyIcon";
-import RocketLaunchIcon from "@heroicons/react/24/outline/RocketLaunchIcon";
-import TrophyIcon from "@heroicons/react/24/outline/TrophyIcon";
-import CpuChipIcon from "@heroicons/react/24/outline/CpuChipIcon";
-import EyeIcon from "@heroicons/react/24/outline/EyeIcon";
-import LightBulbIcon from "@heroicons/react/24/outline/LightBulbIcon";
-import BuildingLibraryIcon from "@heroicons/react/24/outline/BuildingLibraryIcon";
 
 const PRESET_COLORS = ["#D21034", "#CE1126", "#B22234", "#FF0000", "#F77F00", "#FFB700", "#FFD700", "#FCD116", "#009739", "#007A3D", "#00843D", "#008751", "#0055A4", "#003399", "#002868", "#00247D", "#39A9DB", "#75AADB", "#000000", "#FFFFFF"];
 
@@ -37,25 +26,7 @@ type EmblemEntry = { name: string; slug: string; Icon?: SvgIcon; svg?: string };
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
-const EMBLEM_REGISTRY: EmblemEntry[] = [
-    ...FLAG_EMBLEMS.map((e) => ({ name: e.name, slug: e.slug, svg: e.svg })),
-    { name: "Sunburst", slug: "sun", Icon: SunIcon },
-    { name: "Moon", slug: "moon", Icon: MoonIcon },
-    { name: "Bolt", slug: "bolt", Icon: BoltIcon },
-    { name: "Flame", slug: "fire", Icon: FireIcon },
-    { name: "Guard", slug: "shield-check", Icon: ShieldCheckIcon },
-    { name: "Globe", slug: "globe-alt", Icon: GlobeAltIcon },
-    { name: "Heart", slug: "heart", Icon: HeartIcon },
-    { name: "Key", slug: "key", Icon: KeyIcon },
-    { name: "Spark", slug: "sparkles", Icon: SparklesIcon },
-    { name: "Rocket", slug: "rocket-launch", Icon: RocketLaunchIcon },
-    { name: "Trophy", slug: "trophy", Icon: TrophyIcon },
-    { name: "Chip", slug: "cpu-chip", Icon: CpuChipIcon },
-    { name: "Eye", slug: "eye", Icon: EyeIcon },
-    { name: "Idea", slug: "light-bulb", Icon: LightBulbIcon },
-    { name: "Star8", slug: "star", Icon: StarIcon },
-    { name: "Temple2", slug: "building-library", Icon: BuildingLibraryIcon },
-];
+const EMBLEM_REGISTRY: EmblemEntry[] = [...FLAG_EMBLEMS.map((e) => ({ name: e.name, slug: e.slug, svg: e.svg })), { name: "Star Outline", slug: "star", Icon: StarIcon }, { name: "Moon", slug: "moon", Icon: MoonIcon }, { name: "Heart", slug: "heart", Icon: HeartIcon }];
 
 const EMBLEM_SUGGESTIONS = Array.from(new Set([...EMBLEM_REGISTRY.map((item) => item.slug), "academic-cap", "cloud", "flag", "gift", "hand-raised", "home", "language", "map-pin", "musical-note", "paper-airplane", "puzzle-piece", "scale", "user-group", "wrench"])).sort();
 
@@ -78,6 +49,8 @@ export default function CountryMaker() {
     const [emblemSize, setEmblemSize] = useState(EMBLEM_SIZE_DEFAULT);
     const [exporting, setExporting] = useState(false);
     const [rounded, setRounded] = useState(false);
+    const [activeBand, setActiveBand] = useState<number | null>(null);
+    const bandInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
     const emblemEntryBySlug = useMemo(() => new Map(EMBLEM_REGISTRY.map((item) => [item.slug, item])), []);
     const emblemEntryByName = useMemo(() => new Map(EMBLEM_REGISTRY.map((item) => [item.name, item])), []);
@@ -93,9 +66,16 @@ export default function CountryMaker() {
 
     const activeBands = bandsForLayout(layout);
     const { baseStyle, overlays } = useMemo(() => buildFlagStyle(layout, c1, c2, c3), [layout, c1, c2, c3]);
-    const bandSetters = [setC1, setC2, setC3];
-    const bandVals = [c1, c2, c3];
-    const flagBands = bandHotspots(layout).map((h, i) => ({ color: bandVals[i], set: bandSetters[i], x: h.x, y: h.y }));
+    const flagBands = bandHotspots(layout).map((h) => ({ x: h.x, y: h.y }));
+    const pickBand = (i: number) => {
+        setActiveBand(i);
+        requestAnimationFrame(() => {
+            const el = bandInputRefs[i]?.current;
+            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+            el?.focus();
+            el?.select();
+        });
+    };
 
     const normalizeEmblemName = (raw: string) =>
         raw
@@ -227,6 +207,8 @@ export default function CountryMaker() {
                         baseStyle={baseStyle}
                         overlays={overlays}
                         bands={flagBands}
+                        activeBand={activeBand}
+                        onPickBand={pickBand}
                         placed={em.placed}
                         selectedId={em.selectedId}
                         emblemColor={emblemColor}
@@ -248,23 +230,23 @@ export default function CountryMaker() {
                             <label htmlFor="country-name" className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 block">
                                 Country Name (used for the download filename)
                             </label>
-                            <input id="country-name" value={countryName} placeholder="Republic of ..." onChange={(e) => setCountryName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
+                            <input id="country-name" value={countryName} placeholder="Republic of ..." onChange={(e) => setCountryName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-2 text-sm focus:border-zinc-500 outline-none" />
                         </div>
 
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 block">Flag Layout - {LAYOUTS.length} types</label>
-                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                            <div className="grid grid-cols-4 min-[420px]:grid-cols-5 sm:grid-cols-6 lg:grid-cols-7 gap-1.5">
                                 {LAYOUTS.map((l) => {
                                     const mini = buildFlagStyle(l.key, c1, c2, c3);
                                     const active = layout === l.key;
                                     return (
-                                        <button key={l.key} onClick={() => setLayout(l.key)} aria-pressed={active} title={l.name} className={cn("p-1 rounded-lg border transition flex flex-col items-center gap-1", active ? "bg-white border-white" : "border-zinc-700 hover:border-zinc-500")}>
-                                            <div className="relative w-full rounded overflow-hidden ring-1 ring-black/10" style={{ aspectRatio: "3 / 2", ...mini.baseStyle }}>
+                                        <button key={l.key} onClick={() => setLayout(l.key)} aria-pressed={active} title={l.name} className={cn("p-0.5 rounded-md border transition flex flex-col items-center gap-0.5", active ? "bg-white border-white" : "border-zinc-700 hover:border-zinc-500")}>
+                                            <div className="relative w-full rounded-sm overflow-hidden ring-1 ring-black/10" style={{ aspectRatio: "3 / 2", ...mini.baseStyle }}>
                                                 {mini.overlays.map((ov, i) => (
                                                     <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip }} />
                                                 ))}
                                             </div>
-                                            <span className={cn("text-[9px] leading-tight text-center", active ? "text-black font-bold" : "text-zinc-400")}>{l.name}</span>
+                                            <span className={cn("text-[8px] leading-none text-center truncate w-full", active ? "text-black font-bold" : "text-zinc-400")}>{l.name}</span>
                                         </button>
                                     );
                                 })}
@@ -279,13 +261,13 @@ export default function CountryMaker() {
                                     Random
                                 </button>
                             </div>
-                            <div className="grid grid-cols-10 gap-2">
+                            <div className="grid grid-cols-10 gap-1.5">
                                 {PRESET_COLORS.map((color) => (
                                     <button
                                         key={color}
                                         onClick={() => setC1(color)}
                                         aria-label={`Set band 1 color to ${color}`}
-                                        className={cn("aspect-square rounded-full transition-all active:scale-90 border-2", c1 === color ? "border-white scale-110 shadow-lg" : "border-transparent")}
+                                        className={cn("h-7 w-7 mx-auto rounded-full transition-all active:scale-90 border-2", c1 === color ? "border-white scale-110 shadow-lg" : "border-transparent")}
                                         style={{ backgroundColor: color, boxShadow: color === "#FFFFFF" ? "inset 0 0 0 1px rgba(255,255,255,0.2)" : undefined }}
                                         title={`Set band 1 to ${color}`}
                                     />
@@ -303,13 +285,13 @@ export default function CountryMaker() {
                                     { val: c3, set: setC3, label: "Band 3" },
                                 ]
                                     .slice(0, activeBands)
-                                    .map((band) => (
-                                        <div key={band.label} className="flex items-center gap-3">
-                                            <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105 shrink-0" style={{ backgroundColor: band.val }} title={`${band.label} color`}>
+                                    .map((band, idx) => (
+                                        <div key={band.label} className={cn("flex items-center gap-3 rounded-xl p-1.5 -mx-1.5 transition ring-2", activeBand === idx ? "ring-blue-500 bg-blue-500/10" : "ring-transparent")}>
+                                            <label className="relative w-8 h-8 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105 shrink-0" style={{ backgroundColor: band.val }} title={`${band.label} color`}>
                                                 <input type="color" value={band.val} onChange={(e) => band.set(e.target.value)} aria-label={`${band.label} color`} className="absolute inset-0 opacity-0 cursor-pointer" />
                                             </label>
                                             <span className="text-[10px] uppercase tracking-widest text-zinc-400 w-14 shrink-0">{band.label}</span>
-                                            <input type="text" value={band.val} onChange={(e) => band.set(e.target.value)} aria-label={`${band.label} hex value`} className="flex-1 bg-black/40 border border-zinc-800 rounded-xl p-2.5 text-xs font-mono focus:border-zinc-500 outline-none transition" />
+                                            <input ref={bandInputRefs[idx]} type="text" value={band.val} onChange={(e) => band.set(e.target.value)} onFocus={() => setActiveBand(idx)} aria-label={`${band.label} hex value`} className="flex-1 bg-black/40 border border-zinc-800 rounded-xl p-2 text-xs font-mono focus:border-zinc-500 outline-none transition" />
                                         </div>
                                     ))}
                             </div>
@@ -326,7 +308,7 @@ export default function CountryMaker() {
                             <p className="text-[10px] text-zinc-400 mb-3">{em.placed.length} on flag - drag each one where you want it.</p>
 
                             <div className="flex items-center gap-3 mb-3">
-                                <label className="relative w-10 h-10 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105" style={{ backgroundColor: emblemColor }} title="Emblem color">
+                                <label className="relative w-8 h-8 rounded-full border-2 border-white/20 cursor-pointer transition hover:scale-105" style={{ backgroundColor: emblemColor }} title="Emblem color">
                                     <input type="color" value={emblemColor} onChange={(e) => setEmblemColor(e.target.value)} aria-label="Emblem color" className="absolute inset-0 opacity-0 cursor-pointer" />
                                 </label>
                                 <span className="text-[10px] uppercase tracking-widest text-zinc-400">Emblem color</span>
@@ -346,10 +328,10 @@ export default function CountryMaker() {
                                 <label htmlFor="text-emblem" className="text-[10px] uppercase tracking-widest text-zinc-400 mb-2 block">
                                     Text / letters (中, 王, USA, ★)
                                 </label>
-                                <input id="text-emblem" value={em.textEmblem} maxLength={12} placeholder="type letters or characters" onChange={(e) => em.updateText(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none" />
+                                <input id="text-emblem" value={em.textEmblem} maxLength={12} placeholder="type letters or characters" onChange={(e) => em.updateText(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-2 text-sm focus:border-zinc-500 outline-none" />
                             </div>
 
-                            <input value={searchTerm} placeholder="search emblems" aria-label="Search emblems" onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none mb-3" />
+                            <input value={searchTerm} placeholder="search emblems" aria-label="Search emblems" onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-2 text-sm focus:border-zinc-500 outline-none mb-3" />
                             <div className="mb-3 space-y-2">
                                 <label htmlFor="load-emblem" className="text-[10px] uppercase tracking-widest text-zinc-400 block">
                                     Load by Heroicons name
@@ -364,7 +346,7 @@ export default function CountryMaker() {
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") loadEmblemByName();
                                             }}
-                                            className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-sm focus:border-zinc-500 outline-none"
+                                            className="w-full bg-black/40 border border-zinc-800 rounded-xl p-2 text-sm focus:border-zinc-500 outline-none"
                                         />
                                         {emblemMatches.length > 0 && (
                                             <div className="absolute z-20 mt-2 w-full max-h-56 overflow-y-auto rounded-xl border border-white/10 bg-[#121216] shadow-2xl">
