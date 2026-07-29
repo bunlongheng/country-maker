@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { RegisterSW } from "@/components/RegisterSW";
 
 const fankids = localFont({ src: "../public/fonts/FanKids.ttf", variable: "--font-fankids", display: "swap" });
 
@@ -13,6 +14,12 @@ export const metadata: Metadata = {
         type: "website",
     },
     robots: { index: true, follow: true },
+    manifest: "/manifest.json",
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "black-translucent",
+        title: "Country Maker",
+    },
 };
 
 export const viewport = {
@@ -24,7 +31,10 @@ export const viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" className={fankids.variable}>
-            <body>{children}</body>
+            <body>
+                {children}
+                <RegisterSW />
+            </body>
         </html>
     );
 }
