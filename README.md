@@ -75,3 +75,9 @@ gate (typecheck, lint, unit, build, e2e) on every push and PR.
 ## Deploy
 
 Standalone public app on Vercel, auto-deployed from `main`.
+
+---
+
+<p align="center">
+  <sub>Built by <a href="https://bunlongheng.com">Bunlong Heng</a> &middot; <a href="https://bunlongheng.com/projects/country-maker">See it in my portfolio &rarr;</a></sub>
+</p>
