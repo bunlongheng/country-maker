@@ -407,6 +407,13 @@ export default function CountryMaker() {
                     </div>
                 </section>
             </main>
+
+            <footer className="py-6 text-center text-[11px] text-zinc-500">
+                Original idea by{" "}
+                <a href="https://github.com/nordenheng" target="_blank" rel="noopener noreferrer" className="font-semibold text-zinc-300 hover:text-white underline underline-offset-2">
+                    Norden Heng
+                </a>
+            </footer>
         </div>
     );
 }
