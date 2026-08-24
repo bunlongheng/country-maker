@@ -17,7 +17,7 @@ test("build a flag: select, drag, add, rename, download with name", async ({ pag
     await expect(page.getByText(/2 on flag/)).toBeVisible();
 
     // rename inline
-    await page.getByPlaceholder("Tap to name your country").fill("Kingdom of Dragons");
+    await page.getByPlaceholder("Republic of ...").fill("Kingdom of Dragons");
 
     // download and assert the PNG filename comes from the name
     const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download Flag" }).click()]);
