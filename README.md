@@ -1,3 +1,13 @@
+<div align="center">
+  <img src="docs/icon.png" alt="Country Maker" width="96" height="96" />
+  <h1>Country Maker</h1>
+  <p><em>Design your own country flag in the browser: layouts, band colors, draggable emblems, PNG export</em></p>
+  <p><a href="https://country-maker.vercel.app">Live</a> &middot; <a href="https://github.com/bunlongheng/country-maker">Repo</a> &middot; <a href="https://bunlongheng.com/projects?name=country-maker">Portfolio</a></p>
+  <img src="docs/social-preview.png" alt="Country Maker - preview" width="820" />
+</div>
+
+---
+
 # Country Maker
 
 Design your own country flag in the browser, then download it as a PNG. Built for
