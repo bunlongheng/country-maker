@@ -25,7 +25,7 @@ type EmblemEntry = { name: string; slug: string; Icon?: SvgIcon; svg?: string };
 type Panel = "idle" | "shape" | "stickers" | "save";
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v2";
+const APP_VERSION = "v3";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -335,7 +335,7 @@ export default function CountryMaker() {
                     {/* Landscape/desktop has spare room - show every flag shape here for one-tap switching. */}
                     <div className="hidden lg:block shrink-0 border-t border-white/5 px-4 py-3">
                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">Flag shape</div>
-                        <div className="grid grid-cols-7 gap-1.5">
+                        <div className="grid grid-cols-7 gap-1.5 max-h-[32vh] overflow-y-auto pr-1">
                             {LAYOUTS.map((l) => {
                                 const mini = buildFlagStyle(l.key, c1, c2, c3);
                                 const active = layout === l.key;
@@ -418,12 +418,12 @@ export default function CountryMaker() {
                                 </div>
                                 <p className="text-xs text-zinc-500 mb-3">{em.placed.length} on the flag. Tap one to add - then tap it on the flag to color, size, or spin it.</p>
 
-                                <div className="grid grid-cols-6 gap-2.5">
+                                <div className="grid grid-cols-6 lg:grid-cols-7 gap-2">
                                     {EMBLEM_REGISTRY.map((item) => {
                                         const onFlag = em.placed.some((pl) => pl.ref === item.name);
                                         return (
-                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("aspect-square rounded-xl transition flex justify-center items-center active:scale-90", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}>
-                                                {renderEmblem(item, { width: 24, height: 24, color: "currentColor" })}
+                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("aspect-square rounded-lg transition flex justify-center items-center active:scale-90", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}>
+                                                {renderEmblem(item, { width: 20, height: 20, color: "currentColor" })}
                                             </button>
                                         );
                                     })}
