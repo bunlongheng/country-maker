@@ -1,7 +1,42 @@
 // Pure, framework-free flag logic - unit-testable without React.
 import type { CSSProperties } from "react";
 
-export type LayoutKey = "vertical" | "horizontal" | "vertical-bi" | "horizontal-bi" | "nordic" | "saltire" | "diagonal" | "chevron" | "disc" | "canton" | "quadrant" | "solid" | "stripes" | "star-stripes" | "v-stripes" | "pale" | "fess" | "cross" | "border" | "bend" | "diamond";
+export type LayoutKey =
+    | "vertical"
+    | "horizontal"
+    | "vertical-bi"
+    | "horizontal-bi"
+    | "nordic"
+    | "saltire"
+    | "diagonal"
+    | "chevron"
+    | "disc"
+    | "canton"
+    | "quadrant"
+    | "solid"
+    | "stripes"
+    | "star-stripes"
+    | "v-stripes"
+    | "pale"
+    | "fess"
+    | "cross"
+    | "border"
+    | "bend"
+    | "diamond"
+    | "triangle-hoist"
+    | "pile"
+    | "chevron-r"
+    | "spanish"
+    | "pale-wide"
+    | "x-quad"
+    | "bend-up"
+    | "corner"
+    | "bahrain"
+    | "seychelles"
+    | "belarus"
+    | "chevron-up"
+    | "cross-thin"
+    | "corner-br";
 
 export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "vertical", name: "Vertical Tricolor", bands: 3 },
@@ -25,6 +60,20 @@ export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "border", name: "Bordered", bands: 2 },
     { key: "bend", name: "Diagonal Bend", bands: 2 },
     { key: "diamond", name: "Diamond", bands: 2 },
+    { key: "triangle-hoist", name: "Triangle", bands: 3 },
+    { key: "pile", name: "Pile", bands: 2 },
+    { key: "chevron-r", name: "Right Chevron", bands: 2 },
+    { key: "spanish", name: "Spanish Fess", bands: 2 },
+    { key: "pale-wide", name: "Wide Pale", bands: 2 },
+    { key: "x-quad", name: "X Quads", bands: 2 },
+    { key: "bend-up", name: "Rising Bend", bands: 2 },
+    { key: "corner", name: "Corner", bands: 2 },
+    { key: "bahrain", name: "Serrated", bands: 2 },
+    { key: "seychelles", name: "Rays", bands: 3 },
+    { key: "belarus", name: "Ornament", bands: 3 },
+    { key: "chevron-up", name: "Up Chevron", bands: 2 },
+    { key: "cross-thin", name: "Thin Cross", bands: 2 },
+    { key: "corner-br", name: "Corner 2", bands: 2 },
 ];
 
 export type FlagStyle = { baseStyle: CSSProperties; overlays: { clip: string; color: string }[] };
@@ -81,6 +130,45 @@ export function buildFlagStyle(layout: LayoutKey, c1: string, c2: string, c3: st
             return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(0% 0%, 22% 0%, 100% 78%, 100% 100%, 78% 100%, 0% 22%)", color: c2 }] };
         case "diamond":
             return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(50% 8%, 92% 50%, 50% 92%, 8% 50%)", color: c2 }] };
+        case "triangle-hoist":
+            return { baseStyle: { background: `linear-gradient(to bottom, ${c2} 0 50%, ${c3} 50% 100%)` }, overlays: [{ clip: "polygon(0 0, 55% 50%, 0 100%)", color: c1 }] };
+        case "pile":
+            return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(0 0, 100% 0, 50% 62%)", color: c2 }] };
+        case "chevron-r":
+            return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(100% 0, 52% 50%, 100% 100%)", color: c2 }] };
+        case "spanish":
+            return { baseStyle: { background: `linear-gradient(to bottom, ${c1} 0 25%, ${c2} 25% 75%, ${c1} 75% 100%)` }, overlays: [] };
+        case "pale-wide":
+            return { baseStyle: { background: `linear-gradient(to right, ${c1} 0 25%, ${c2} 25% 75%, ${c1} 75% 100%)` }, overlays: [] };
+        case "x-quad":
+            return {
+                baseStyle: { background: c1 },
+                overlays: [
+                    { clip: "polygon(0 0, 50% 50%, 0 100%)", color: c2 },
+                    { clip: "polygon(100% 0, 50% 50%, 100% 100%)", color: c2 },
+                ],
+            };
+        case "bend-up":
+            return { baseStyle: { background: `linear-gradient(45deg, ${c1} 0 50%, ${c2} 50% 100%)` }, overlays: [] };
+        case "corner":
+            return { baseStyle: { background: c2 }, overlays: [{ clip: "polygon(0 0, 46% 0, 0 66%)", color: c1 }] };
+        case "bahrain":
+            return { baseStyle: { background: c2 }, overlays: [{ clip: "polygon(0 0, 30% 0, 45% 10%, 30% 20%, 45% 30%, 30% 40%, 45% 50%, 30% 60%, 45% 70%, 30% 80%, 45% 90%, 30% 100%, 0 100%)", color: c1 }] };
+        case "seychelles":
+            return { baseStyle: { background: `conic-gradient(from 0deg at 0% 100%, ${c1} 0 30deg, ${c2} 30deg 60deg, ${c3} 60deg 100%)` }, overlays: [] };
+        case "belarus":
+            return {
+                baseStyle: {
+                    background: `repeating-linear-gradient(45deg, ${c1} 0 2px, transparent 2px 8px) 0 0 / 14% 100% no-repeat, repeating-linear-gradient(-45deg, ${c1} 0 2px, transparent 2px 8px) 0 0 / 14% 100% no-repeat, linear-gradient(${c2}, ${c2}) 0 0 / 14% 100% no-repeat, linear-gradient(to bottom, ${c1} 0 66.6%, ${c3} 66.6% 100%)`,
+                },
+                overlays: [],
+            };
+        case "chevron-up":
+            return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(0 100%, 100% 100%, 50% 38%)", color: c2 }] };
+        case "cross-thin":
+            return { baseStyle: { background: `linear-gradient(${c2}, ${c2}) 0 50% / 100% 12% no-repeat, linear-gradient(${c2}, ${c2}) 50% 0 / 8% 100% no-repeat, ${c1}` }, overlays: [] };
+        case "corner-br":
+            return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(100% 100%, 54% 100%, 100% 34%)", color: c2 }] };
         default:
             return { baseStyle: { background: c1 }, overlays: [] };
     }
@@ -264,6 +352,37 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
             return [[WHOLE], [{ clip: "polygon(0% 0%, 22% 0%, 100% 78%, 100% 100%, 78% 100%, 0% 22%)" }]];
         case "diamond":
             return [[WHOLE], [{ clip: "polygon(50% 8%, 92% 50%, 50% 92%, 8% 50%)" }]];
+        case "triangle-hoist":
+            return [[{ clip: "polygon(0 0, 55% 50%, 0 100%)" }], [{ rect: [0, 0, 100, 50] }], [{ rect: [0, 50, 100, 50] }]];
+        case "pile":
+            return [[WHOLE], [{ clip: "polygon(0 0, 100% 0, 50% 62%)" }]];
+        case "chevron-r":
+            return [[WHOLE], [{ clip: "polygon(100% 0, 52% 50%, 100% 100%)" }]];
+        case "spanish":
+            return [[{ rect: [0, 0, 100, 25] }, { rect: [0, 75, 100, 25] }], [{ rect: [0, 25, 100, 50] }]];
+        case "pale-wide":
+            return [[{ rect: [0, 0, 25, 100] }, { rect: [75, 0, 25, 100] }], [{ rect: [25, 0, 50, 100] }]];
+        case "x-quad":
+            return [
+                [{ clip: "polygon(0 0, 100% 0, 50% 50%)" }, { clip: "polygon(0 100%, 100% 100%, 50% 50%)" }],
+                [{ clip: "polygon(0 0, 50% 50%, 0 100%)" }, { clip: "polygon(100% 0, 50% 50%, 100% 100%)" }],
+            ];
+        case "bend-up":
+            return [[{ clip: "polygon(0 0, 100% 100%, 0 100%)" }], [{ clip: "polygon(0 0, 100% 0, 100% 100%)" }]];
+        case "corner":
+            return [[WHOLE], [{ clip: "polygon(0 0, 46% 0, 0 66%)" }]];
+        case "bahrain":
+            return [[{ clip: "polygon(0 0, 30% 0, 45% 10%, 30% 20%, 45% 30%, 30% 40%, 45% 50%, 30% 60%, 45% 70%, 30% 80%, 45% 90%, 30% 100%, 0 100%)" }], [WHOLE]];
+        case "seychelles":
+            return [[{ rect: [2, 2, 30, 34] }], [{ rect: [28, 30, 34, 40] }], [{ rect: [55, 60, 43, 38] }]];
+        case "belarus":
+            return [[{ rect: [14, 0, 86, 66.6] }], [{ rect: [0, 0, 14, 100] }], [{ rect: [14, 66.6, 86, 33.4] }]];
+        case "chevron-up":
+            return [[WHOLE], [{ clip: "polygon(0 100%, 100% 100%, 50% 38%)" }]];
+        case "cross-thin":
+            return [[WHOLE], [{ clip: "polygon(46% 0, 54% 0, 54% 44%, 100% 44%, 100% 56%, 54% 56%, 54% 100%, 46% 100%, 46% 56%, 0 56%, 0 44%, 46% 44%)" }]];
+        case "corner-br":
+            return [[WHOLE], [{ clip: "polygon(100% 100%, 54% 100%, 100% 34%)" }]];
         default:
             return [[WHOLE]];
     }
@@ -290,7 +409,7 @@ export function toggleInList<T>(list: T[], item: T): T[] {
 export const EMBLEM_SIZE_MIN = 40;
 export const EMBLEM_SIZE_MAX = 240;
 export const EMBLEM_SIZE_DEFAULT = 100;
-export const EMBLEM_COLOR_DEFAULT = "#F5A623";
+export const EMBLEM_COLOR_DEFAULT = "#FFC400";
 
 export type Placed = { id: string; kind: "emblem" | "text"; ref: string; x: number; y: number; color?: string; size?: number; rot?: number };
 

@@ -9,7 +9,7 @@ export function useEmblems() {
     const lastSize = useRef(EMBLEM_SIZE_DEFAULT);
     const nextId = () => `e${++idc.current}`;
 
-    const [placed, setPlaced] = useState<Placed[]>([{ id: "e1", kind: "emblem", ref: "Sun", x: 50, y: 50, color: EMBLEM_COLOR_DEFAULT, size: EMBLEM_SIZE_DEFAULT, rot: 0 }]);
+    const [placed, setPlaced] = useState<Placed[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [customSvgs, setCustomSvgs] = useState<Record<string, string>>({});
     const [textEmblem, setTextEmblem] = useState("");

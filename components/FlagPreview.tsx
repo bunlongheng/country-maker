@@ -120,6 +120,29 @@ export function FlagPreview(p: Props) {
         if (pointers.current.size === 0) drag.current = null;
     };
 
+    // One corner handle (mouse-friendly): drag out/in to resize, arc around to rotate - does both at once.
+    const handle = useRef<string | null>(null);
+    const onHandleDown = (e: React.PointerEvent, id: string) => {
+        e.stopPropagation();
+        handle.current = id;
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    };
+    const onHandleMove = (e: React.PointerEvent) => {
+        const id = handle.current;
+        if (!id || !p.flagRef.current) return;
+        const it = p.placed.find((x) => x.id === id);
+        if (!it) return;
+        const r = p.flagRef.current.getBoundingClientRect();
+        const dx = e.clientX - (r.left + (it.x / 100) * r.width);
+        const dy = e.clientY - (r.top + (it.y / 100) * r.height);
+        const size = Math.max(EMBLEM_SIZE_MIN, Math.min(EMBLEM_SIZE_MAX, Math.round(Math.hypot(dx, dy) * 1.414)));
+        const rot = (((((Math.atan2(dy, dx) * 180) / Math.PI - 45 + 180) % 360) + 360) % 360) - 180; // corner rests at +45deg
+        p.updateEmblem(id, { size, rot: Math.round(rot) });
+    };
+    const onHandleUp = () => {
+        handle.current = null;
+    };
+
     // Draw larger regions first so smaller ones (crosses, cantons, inner boxes) sit on top and catch their own taps.
     const ordered = p.regions.map((shapes, bi) => ({ bi, shapes })).sort((a, b) => areaOf(b.shapes) - areaOf(a.shapes));
 
@@ -210,17 +233,28 @@ export function FlagPreview(p: Props) {
                             <div key={it.id} style={wrap} onPointerDown={(e) => onStickerDown(e, it)} onPointerMove={onStickerMove} onPointerUp={onStickerUp} onPointerCancel={onStickerUp}>
                                 <div style={rotor}>{it.kind === "text" ? <span style={{ ...paint, fontWeight: 800, fontSize: `${size * 0.9}px`, lineHeight: 1, whiteSpace: "nowrap" }}>{it.ref}</span> : p.renderEmblem(it.ref, { ...paint, width: `${size}px`, height: `${size}px` })}</div>
                                 {isSel && (
-                                    <button
-                                        aria-label="Remove this emblem"
-                                        onPointerDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            p.removePlaced(it.id);
-                                        }}
-                                        style={{ position: "absolute", top: "-16px", right: "-16px", width: "26px", height: "26px", borderRadius: "9999px", background: "#ef4444", color: "#fff", border: "2px solid #1c1c1e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", lineHeight: 1, zIndex: 6, cursor: "pointer" }}
-                                    >
-                                        ×
-                                    </button>
+                                    <>
+                                        <button
+                                            aria-label="Remove this emblem"
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                p.removePlaced(it.id);
+                                            }}
+                                            style={{ position: "absolute", top: "-16px", right: "-16px", width: "26px", height: "26px", borderRadius: "9999px", background: "#ef4444", color: "#fff", border: "2px solid #1c1c1e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", lineHeight: 1, zIndex: 6, cursor: "pointer" }}
+                                        >
+                                            ×
+                                        </button>
+                                        {/* Plain corner handle: drag out/in to resize, arc to rotate. Works with a mouse too. */}
+                                        <button
+                                            aria-label="Resize or rotate this sticker"
+                                            onPointerDown={(e) => onHandleDown(e, it.id)}
+                                            onPointerMove={onHandleMove}
+                                            onPointerUp={onHandleUp}
+                                            onPointerCancel={onHandleUp}
+                                            style={{ position: "absolute", bottom: "-15px", right: "-15px", width: "24px", height: "24px", borderRadius: "9999px", background: "#fff", border: "2px solid #1c1c1e", boxShadow: "0 1px 3px rgba(0,0,0,0.4)", zIndex: 6, cursor: "nwse-resize", touchAction: "none" }}
+                                        />
+                                    </>
                                 )}
                             </div>
                         );
