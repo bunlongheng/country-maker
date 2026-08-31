@@ -2,7 +2,7 @@
 // dragon, crescent + star, etc.). Rendered via dangerouslySetInnerHTML with the
 // container's `color` mapped to `currentColor`, so a single emblem color drives fill.
 
-import { ANGKOR_WAT_SVG, DRUK_SVG } from "@/lib/emblemSvgs";
+import { ANGKOR_WAT_SVG, DRUK_SVG, ERITREA_WREATH_SVG, FRIGATEBIRD_SVG, EAGLE_SVG, KYRGYZ_SUN_SVG, MACEDONIA_SUN_SVG } from "@/lib/emblemSvgs";
 
 export type FlagEmblem = { name: string; slug: string; svg: string };
 
@@ -46,8 +46,36 @@ function buildNorthStar(): string {
     return `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${star(4, 48, 9, up) + star(4, 24, 7, up + Math.PI / 4)}"/></svg>`;
 }
 
+// One star centred in the box, `pts` points, outer radius rO, inner ratio.
+const starPath = (cx: number, cy: number, pts: number, rO: number, ratio = 0.42) => {
+    let d = "";
+    const up = -Math.PI / 2;
+    for (let i = 0; i < pts * 2; i++) {
+        const a = up + (i * Math.PI) / pts;
+        const r = i % 2 === 0 ? rO : rO * ratio;
+        d += `${i === 0 ? "M" : "L"}${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)} `;
+    }
+    return d + "Z ";
+};
+const buildStar = (pts: number, rO = 46, ratio = 0.42) => `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${starPath(50, 50, pts, rO, ratio)}"/></svg>`;
+// Southern Cross (flag of Australia): four 7-point stars + one small 5-point star.
+const buildSouthernCross = () => `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${starPath(50, 84, 7, 13) + starPath(24, 52, 7, 13) + starPath(50, 16, 7, 13) + starPath(74, 42, 7, 13) + starPath(61, 63, 5, 7)}"/></svg>`;
+
 export const FLAG_EMBLEMS: FlagEmblem[] = [
     { name: "Sun", slug: "sun-rays", svg: buildSun() },
+    { name: "Star 5", slug: "star-5", svg: buildStar(5) },
+    { name: "Star 6", slug: "star-6", svg: buildStar(6) },
+    { name: "Star 7", slug: "star-7", svg: buildStar(7, 46, 0.44) },
+    { name: "Star 8", slug: "star-8", svg: buildStar(8) },
+    { name: "Southern Cross", slug: "southern-cross", svg: buildSouthernCross() },
+    { name: "Star of David", slug: "star-of-david", svg: `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M50 6 L88.1 72 L11.9 72 Z"/><path d="M50 94 L88.1 28 L11.9 28 Z"/></svg>` },
+    { name: "Yin Yang", slug: "yin-yang", svg: `<svg viewBox="0 0 100 100" fill="currentColor" fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg"><path d="M50 5a45 45 0 100 90 22.5 22.5 0 010-45 22.5 22.5 0 000-45z m0 25.5a3.6 3.6 0 100 7.2 3.6 3.6 0 000-7.2z"/><circle cx="50" cy="69" r="3.6"/></svg>` },
+    { name: "Plus", slug: "plus", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M42 8h16v34h34v16H58v34H42V58H8V42h34z"/></svg>` },
+    { name: "Wreath", slug: "wreath", svg: ERITREA_WREATH_SVG },
+    { name: "Bird", slug: "bird", svg: FRIGATEBIRD_SVG },
+    { name: "Eagle", slug: "eagle", svg: EAGLE_SVG },
+    { name: "Sun Wheel", slug: "kyrgyz-sun", svg: KYRGYZ_SUN_SVG },
+    { name: "Sun Burst", slug: "macedonia-sun", svg: MACEDONIA_SUN_SVG },
     { name: "Nordic Cross", slug: "nordic-cross", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0 40 H100 V60 H0 Z M26 0 H46 V100 H26 Z"/></svg>` },
     { name: "North Star", slug: "north-star", svg: buildNorthStar() },
     { name: "Fir Tree", slug: "fir-tree", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M50 8 L64 40 L36 40 Z M50 30 L74 64 L26 64 Z M50 54 L84 88 L16 88 Z M44 88 L56 88 L56 97 L44 97 Z"/></svg>` },
