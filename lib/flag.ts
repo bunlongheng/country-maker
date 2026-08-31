@@ -36,7 +36,8 @@ export type LayoutKey =
     | "belarus"
     | "chevron-up"
     | "cross-thin"
-    | "corner-br";
+    | "corner-br"
+    | "union";
 
 export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "vertical", name: "Vertical Tricolor", bands: 3 },
@@ -74,6 +75,7 @@ export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "chevron-up", name: "Up Chevron", bands: 2 },
     { key: "cross-thin", name: "Thin Cross", bands: 2 },
     { key: "corner-br", name: "Corner 2", bands: 2 },
+    { key: "union", name: "Union Jack", bands: 3 },
 ];
 
 export type FlagStyle = { baseStyle: CSSProperties; overlays: { clip: string; color: string }[] };
@@ -169,6 +171,19 @@ export function buildFlagStyle(layout: LayoutKey, c1: string, c2: string, c3: st
             return { baseStyle: { background: `linear-gradient(${c2}, ${c2}) 0 50% / 100% 12% no-repeat, linear-gradient(${c2}, ${c2}) 50% 0 / 8% 100% no-repeat, ${c1}` }, overlays: [] };
         case "corner-br":
             return { baseStyle: { background: c1 }, overlays: [{ clip: "polygon(100% 100%, 54% 100%, 100% 34%)", color: c2 }] };
+        case "union":
+            // Union Jack: blue field, white then red saltire (X), then white then red upright cross (+).
+            return {
+                baseStyle: { background: c1 },
+                overlays: [
+                    { clip: "polygon(0% 0%, 15% 0%, 100% 78%, 100% 100%, 85% 100%, 0% 22%)", color: c2 },
+                    { clip: "polygon(100% 0%, 100% 22%, 15% 100%, 0% 100%, 0% 78%, 85% 0%)", color: c2 },
+                    { clip: "polygon(0% 0%, 8% 0%, 100% 84%, 100% 100%, 92% 100%, 0% 16%)", color: c3 },
+                    { clip: "polygon(100% 0%, 100% 16%, 8% 100%, 0% 100%, 0% 84%, 92% 0%)", color: c3 },
+                    { clip: "polygon(40% 0, 60% 0, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0 60%, 0 40%, 40% 40%)", color: c2 },
+                    { clip: "polygon(45% 0, 55% 0, 55% 45%, 100% 45%, 100% 55%, 55% 55%, 55% 100%, 45% 100%, 45% 55%, 0 55%, 0 45%, 45% 45%)", color: c3 },
+                ],
+            };
         default:
             return { baseStyle: { background: c1 }, overlays: [] };
     }
@@ -383,6 +398,8 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
             return [[WHOLE], [{ clip: "polygon(46% 0, 54% 0, 54% 44%, 100% 44%, 100% 56%, 54% 56%, 54% 100%, 46% 100%, 46% 56%, 0 56%, 0 44%, 46% 44%)" }]];
         case "corner-br":
             return [[WHOLE], [{ clip: "polygon(100% 100%, 54% 100%, 100% 34%)" }]];
+        case "union":
+            return [[{ rect: [3, 3, 15, 14] }], [{ rect: [20, 6, 12, 9] }], [{ rect: [46, 2, 8, 12] }]];
         default:
             return [[WHOLE]];
     }

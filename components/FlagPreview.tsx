@@ -168,7 +168,7 @@ export function FlagPreview(p: Props) {
                     onPointerUp={onUp}
                     onPointerCancel={onUp}
                     style={{
-                        width: "min(100%, 700px)",
+                        width: "min(100%, 500px)",
                         aspectRatio: "3 / 2",
                         marginInline: "auto",
                         borderRadius: p.rounded ? "1rem" : "0px",
