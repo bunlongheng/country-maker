@@ -203,6 +203,61 @@ export function bandHotspots(layout: LayoutKey): { x: number; y: number }[] {
     }
 }
 
+// A highlightable region on the flag: a plain rectangle (left/top/width/height %) or a clip-path shape.
+export type BandShape = { rect: [number, number, number, number] } | { clip: string };
+const WHOLE: BandShape = { rect: [0, 0, 100, 100] };
+
+/** The actual area(s) each band's color fills, so the picker can light up the whole stripe (not a tiny dot). */
+export function bandRegions(layout: LayoutKey): BandShape[][] {
+    switch (layout) {
+        case "vertical":
+            return [[{ rect: [0, 0, 33.34, 100] }], [{ rect: [33.33, 0, 33.34, 100] }], [{ rect: [66.67, 0, 33.33, 100] }]];
+        case "horizontal":
+            return [[{ rect: [0, 0, 100, 33.34] }], [{ rect: [0, 33.33, 100, 33.34] }], [{ rect: [0, 66.67, 100, 33.33] }]];
+        case "vertical-bi":
+            return [[{ rect: [0, 0, 50, 100] }], [{ rect: [50, 0, 50, 100] }]];
+        case "horizontal-bi":
+            return [[{ rect: [0, 0, 100, 50] }], [{ rect: [0, 50, 100, 50] }]];
+        case "stripes":
+            return [[{ rect: [0, 0, 100, 7.69] }], [{ rect: [0, 7.69, 100, 7.69] }]];
+        case "star-stripes":
+            return [[{ rect: [0, 53.85, 100, 7.69] }], [{ rect: [0, 61.54, 100, 7.69] }], [{ rect: [0, 0, 40, 53.85] }]];
+        case "nordic":
+            return [[WHOLE], [{ clip: "polygon(24% 0, 40% 0, 40% 39%, 100% 39%, 100% 61%, 40% 61%, 40% 100%, 24% 100%, 24% 61%, 0 61%, 0 39%, 24% 39%)" }]];
+        case "saltire":
+            return [[WHOLE], [{ clip: "polygon(0% 0%, 15% 0%, 100% 82%, 100% 100%, 85% 100%, 0% 18%)" }, { clip: "polygon(100% 0%, 100% 18%, 15% 100%, 0% 100%, 0% 82%, 85% 0%)" }]];
+        case "diagonal":
+            return [[{ clip: "polygon(0 0, 100% 0, 0 100%)" }], [{ clip: "polygon(100% 0, 100% 100%, 0 100%)" }]];
+        case "chevron":
+            return [[WHOLE], [{ clip: "polygon(0% 0%, 48% 50%, 0% 100%)" }]];
+        case "disc":
+            return [[WHOLE], [{ clip: "ellipse(22% 33% at 50% 50%)" }]];
+        case "canton":
+            return [[{ rect: [0, 0, 40, 100] }], [{ rect: [40, 0, 60, 50] }], [{ rect: [40, 50, 60, 50] }]];
+        case "quadrant":
+            return [
+                [{ rect: [0, 0, 50, 50] }, { rect: [50, 50, 50, 50] }],
+                [{ rect: [50, 0, 50, 50] }, { rect: [0, 50, 50, 50] }],
+            ];
+        case "v-stripes":
+            return [[{ rect: [0, 0, 7.69, 100] }], [{ rect: [7.69, 0, 7.69, 100] }]];
+        case "pale":
+            return [[WHOLE], [{ rect: [33.33, 0, 33.34, 100] }]];
+        case "fess":
+            return [[WHOLE], [{ rect: [0, 33.33, 100, 33.34] }]];
+        case "cross":
+            return [[WHOLE], [{ clip: "polygon(42% 0, 58% 0, 58% 39%, 100% 39%, 100% 61%, 58% 61%, 58% 100%, 42% 100%, 42% 61%, 0 61%, 0 39%, 42% 39%)" }]];
+        case "border":
+            return [[{ rect: [10, 15, 80, 70] }], [WHOLE]];
+        case "bend":
+            return [[WHOLE], [{ clip: "polygon(0% 0%, 22% 0%, 100% 78%, 100% 100%, 78% 100%, 0% 22%)" }]];
+        case "diamond":
+            return [[WHOLE], [{ clip: "polygon(50% 8%, 92% 50%, 50% 92%, 8% 50%)" }]];
+        default:
+            return [[WHOLE]];
+    }
+}
+
 /** Turn a country name into a safe PNG filename. */
 export function sanitizeFilename(name: string): string {
     return (
@@ -219,9 +274,14 @@ export function toggleInList<T>(list: T[], item: T): T[] {
     return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
 }
 
-// ---- Placed emblems (each lives at its own x,y % on the flag) ----
+// ---- Placed emblems (each lives at its own x,y % on the flag, with its own color/size/rotation) ----
 
-export type Placed = { id: string; kind: "emblem" | "text"; ref: string; x: number; y: number };
+export const EMBLEM_SIZE_MIN = 40;
+export const EMBLEM_SIZE_MAX = 240;
+export const EMBLEM_SIZE_DEFAULT = 100;
+export const EMBLEM_COLOR_DEFAULT = "#F5A623";
+
+export type Placed = { id: string; kind: "emblem" | "text"; ref: string; x: number; y: number; color?: string; size?: number; rot?: number };
 
 /** Clamp a position value to the flag's 0-100% range. */
 export const clampPos = (n: number): number => Math.min(100, Math.max(0, n));
@@ -232,17 +292,17 @@ export function centerNudge(placed: Placed[]): number {
     return Math.min(near * 7, 28);
 }
 
-/** Add an emblem at the centre (nudged if busy). Pure - returns the new list. */
-export function addEmblemAt(placed: Placed[], id: string, ref: string): Placed[] {
+/** Add an emblem at the centre (nudged if busy), with its own color/size/rotation. Pure. */
+export function addEmblemAt(placed: Placed[], id: string, ref: string, color: string = EMBLEM_COLOR_DEFAULT, size: number = EMBLEM_SIZE_DEFAULT): Placed[] {
     const off = centerNudge(placed);
-    return [...placed, { id, kind: "emblem", ref, x: 50 + off, y: 50 + off }];
+    return [...placed, { id, kind: "emblem", ref, x: 50 + off, y: 50 + off, color, size, rot: 0 }];
 }
 
 /** Create/update/remove the single text item to match the input. Pure. */
 export function upsertText(placed: Placed[], text: string): Placed[] {
     if (!text.trim()) return placed.filter((p) => p.kind !== "text");
     if (placed.some((p) => p.kind === "text")) return placed.map((p) => (p.kind === "text" ? { ...p, ref: text } : p));
-    return [...placed, { id: "text", kind: "text", ref: text, x: 50, y: 66 }];
+    return [...placed, { id: "text", kind: "text", ref: text, x: 50, y: 66, color: EMBLEM_COLOR_DEFAULT, size: EMBLEM_SIZE_DEFAULT, rot: 0 }];
 }
 
 /** Move one placed item to a new clamped position. Pure. */
