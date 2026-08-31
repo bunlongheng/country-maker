@@ -10,38 +10,46 @@ type Props = {
     rounded: boolean;
     baseStyle: React.CSSProperties;
     overlays: { clip: string; color: string }[];
-    bands: { x: number; y: number }[];
+    regions: BandShape[][];
     activeBand: number | null;
-    activeRegion: BandShape[] | null;
     onPickBand: (i: number) => void;
+    onSwipeLayout: (dir: 1 | -1) => void;
     placed: Placed[];
     selectedId: string | null;
-    onDeselect: () => void;
     onSelectEmblem: () => void;
     startDrag: (e: React.PointerEvent, id: string) => void;
     moveDrag: (e: React.PointerEvent) => void;
     endDrag: () => void;
     removePlaced: (id: string) => void;
     renderEmblem: (ref: string, style: React.CSSProperties, key?: React.Key) => React.ReactNode;
-    onSwipeLayout: (dir: 1 | -1) => void;
 };
 
+// Rough area of a band's region, so we can paint big fields first and small shapes on top (correct hit order).
+const areaOf = (shapes: BandShape[]) => shapes.reduce((a, s) => a + ("rect" in s ? s.rect[2] * s.rect[3] : 2500), 0);
+
 export function FlagPreview(p: Props) {
-    // Track a pointer press on the bare flag: a clear horizontal drag swipes to the next/prev shape,
-    // a plain tap deselects. Presses on stripes/stickers stopPropagation, so this never eats their taps.
-    const press = useRef<{ x: number; y: number } | null>(null);
-    const onFlagDown = (e: React.PointerEvent) => {
-        press.current = { x: e.clientX, y: e.clientY };
+    // One gesture tracker on the flag: a clear horizontal drag swipes to the next/prev shape; a tap selects a stripe.
+    const g = useRef({ x: 0, y: 0, active: false, swiped: false });
+    const onDown = (e: React.PointerEvent) => {
+        g.current = { x: e.clientX, y: e.clientY, active: true, swiped: false };
     };
-    const onFlagUp = (e: React.PointerEvent) => {
-        const start = press.current;
-        press.current = null;
-        if (!start) return;
-        const dx = e.clientX - start.x;
-        const dy = e.clientY - start.y;
-        if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) p.onSwipeLayout(dx < 0 ? 1 : -1);
-        else p.onDeselect();
+    const onMove = (e: React.PointerEvent) => {
+        const s = g.current;
+        if (!s.active || s.swiped) return;
+        const dx = e.clientX - s.x;
+        const dy = e.clientY - s.y;
+        if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+            s.swiped = true;
+            p.onSwipeLayout(dx < 0 ? 1 : -1);
+        }
     };
+    const onUp = () => {
+        g.current.active = false;
+    };
+
+    // Draw larger regions first so smaller ones (crosses, cantons, inner boxes) sit on top and catch their own taps.
+    const ordered = p.regions.map((shapes, bi) => ({ bi, shapes })).sort((a, b) => areaOf(b.shapes) - areaOf(a.shapes));
+
     return (
         <div className="h-full w-full flex items-center justify-center p-4 sm:p-6 lg:p-8">
             <div
@@ -59,9 +67,10 @@ export function FlagPreview(p: Props) {
             >
                 <div
                     ref={p.flagRef}
-                    onPointerDown={onFlagDown}
-                    onPointerUp={onFlagUp}
-                    onPointerCancel={() => (press.current = null)}
+                    onPointerDown={onDown}
+                    onPointerMove={onMove}
+                    onPointerUp={onUp}
+                    onPointerCancel={onUp}
                     style={{
                         width: "min(100%, 700px)",
                         aspectRatio: "3 / 2",
@@ -77,30 +86,19 @@ export function FlagPreview(p: Props) {
                     {p.overlays.map((ov, i) => (
                         <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip, zIndex: 1, pointerEvents: "none" }} />
                     ))}
-                    {/* Light up the WHOLE selected stripe region so it's obvious which area the color paints. */}
+
+                    {/* Each stripe region is a tap target that lights up when selected - tap anywhere on the stripe. */}
                     {!p.exporting &&
-                        p.activeRegion?.map((shape, i) =>
-                            "rect" in shape ? (
-                                <div key={`hl${i}`} className="cm-band-hl" style={{ position: "absolute", left: `${shape.rect[0]}%`, top: `${shape.rect[1]}%`, width: `${shape.rect[2]}%`, height: `${shape.rect[3]}%`, background: "rgba(59,130,246,0.30)", boxShadow: "inset 0 0 0 3px #3b82f6", zIndex: 2, pointerEvents: "none" }} />
-                            ) : (
-                                <div key={`hl${i}`} className="cm-band-hl" style={{ position: "absolute", inset: 0, background: "rgba(59,130,246,0.42)", clipPath: shape.clip, zIndex: 2, pointerEvents: "none" }} />
-                            ),
+                        ordered.map(({ bi, shapes }) =>
+                            shapes.map((shape, si) => {
+                                const active = p.activeBand === bi;
+                                const common: React.CSSProperties = { position: "absolute", zIndex: 2, cursor: "pointer", border: "none", background: "transparent", padding: 0 };
+                                const style: React.CSSProperties =
+                                    "rect" in shape ? { ...common, left: `${shape.rect[0]}%`, top: `${shape.rect[1]}%`, width: `${shape.rect[2]}%`, height: `${shape.rect[3]}%`, ...(active ? { background: "rgba(59,130,246,0.32)", boxShadow: "inset 0 0 0 3px #3b82f6" } : {}) } : { ...common, inset: 0, clipPath: shape.clip, ...(active ? { background: "rgba(59,130,246,0.42)" } : {}) };
+                                return <button key={`b${bi}-${si}`} aria-label={`Pick stripe ${bi + 1} color`} aria-pressed={active} className={active ? "cm-band-hl" : undefined} onClick={() => (g.current.swiped ? null : p.onPickBand(bi))} style={style} />;
+                            }),
                         )}
-                    {!p.exporting &&
-                        p.bands.map((b, i) => (
-                            <button
-                                key={i}
-                                aria-label={`Pick stripe ${i + 1} color`}
-                                aria-pressed={p.activeBand === i}
-                                title="Tap this stripe, then pick a color"
-                                onPointerDown={(e) => e.stopPropagation()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    p.onPickBand(i);
-                                }}
-                                style={{ position: "absolute", left: `${b.x}%`, top: `${b.y}%`, transform: "translate(-50%, -50%)", width: "30%", height: "36%", background: "transparent", border: "none", zIndex: 3, cursor: "pointer" }}
-                            />
-                        ))}
+
                     {p.placed.map((it) => {
                         const isSel = p.selectedId === it.id && !p.exporting;
                         const color = it.color ?? EMBLEM_COLOR_DEFAULT;
@@ -111,7 +109,7 @@ export function FlagPreview(p: Props) {
                             left: `${it.x}%`,
                             top: `${it.y}%`,
                             transform: "translate(-50%, -50%)",
-                            zIndex: isSel ? 5 : 3,
+                            zIndex: isSel ? 5 : 4,
                             cursor: "grab",
                             touchAction: "none",
                             lineHeight: 0,
@@ -127,6 +125,7 @@ export function FlagPreview(p: Props) {
                                 key={it.id}
                                 style={wrap}
                                 onPointerDown={(e) => {
+                                    e.stopPropagation();
                                     p.onSelectEmblem();
                                     p.startDrag(e, it.id);
                                 }}

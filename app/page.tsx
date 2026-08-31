@@ -1,6 +1,6 @@
 "use client";
 import { FLAG_EMBLEMS } from "@/lib/flagEmblems";
-import { LAYOUTS, buildFlagStyle, bandsForLayout, bandHotspots, bandRegions, sanitizeFilename, sanitizeSvg, EMBLEM_SIZE_MIN, EMBLEM_SIZE_MAX, EMBLEM_COLOR_DEFAULT, type LayoutKey, type Placed } from "@/lib/flag";
+import { LAYOUTS, buildFlagStyle, bandsForLayout, bandRegions, sanitizeFilename, sanitizeSvg, EMBLEM_SIZE_MIN, EMBLEM_SIZE_MAX, EMBLEM_COLOR_DEFAULT, type LayoutKey, type Placed } from "@/lib/flag";
 import { useEmblems } from "@/lib/useEmblems";
 import { FlagPreview } from "@/components/FlagPreview";
 
@@ -98,8 +98,7 @@ export default function CountryMaker() {
 
     const activeBands = bandsForLayout(layout);
     const { baseStyle, overlays } = useMemo(() => buildFlagStyle(layout, c1, c2, c3), [layout, c1, c2, c3]);
-    const flagBands = bandHotspots(layout).map((h) => ({ x: h.x, y: h.y }));
-    const activeRegion = activeBand !== null ? (bandRegions(layout)[activeBand] ?? null) : null;
+    const regions = bandRegions(layout);
     const bandColors = [c1, c2, c3];
     const bandSetters = [setC1, setC2, setC3];
 
@@ -256,16 +255,11 @@ export default function CountryMaker() {
                         rounded={rounded}
                         baseStyle={baseStyle}
                         overlays={overlays}
-                        bands={flagBands}
+                        regions={regions}
                         activeBand={activeBand}
-                        activeRegion={activeRegion}
                         onPickBand={pickBand}
                         placed={em.placed}
                         selectedId={em.selectedId}
-                        onDeselect={() => {
-                            em.setSelectedId(null);
-                            setActiveBand(null);
-                        }}
                         onSelectEmblem={() => {
                             setActiveBand(null);
                             if (panel !== "stickers") setPanel("idle");
