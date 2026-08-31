@@ -19,4 +19,6 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Kill double-tap-to-zoom so a kid tapping fast never zooms the UI. */
+    touch-action: manipulation;
 }
