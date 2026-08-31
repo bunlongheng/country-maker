@@ -13,7 +13,6 @@ type Props = {
     regions: BandShape[][];
     activeBand: number | null;
     onPickBand: (i: number) => void;
-    onSwipeLayout: (dir: 1 | -1) => void;
     placed: Placed[];
     selectedId: string | null;
     onSelectEmblem: () => void;
@@ -55,25 +54,6 @@ function ShapeOutline({ shape }: { shape: BandShape }) {
 }
 
 export function FlagPreview(p: Props) {
-    // One gesture tracker on the flag: a clear horizontal drag swipes to the next/prev shape; a tap selects a stripe.
-    const g = useRef({ x: 0, y: 0, active: false, swiped: false });
-    const onDown = (e: React.PointerEvent) => {
-        g.current = { x: e.clientX, y: e.clientY, active: true, swiped: false };
-    };
-    const onMove = (e: React.PointerEvent) => {
-        const s = g.current;
-        if (!s.active || s.swiped) return;
-        const dx = e.clientX - s.x;
-        const dy = e.clientY - s.y;
-        if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) {
-            s.swiped = true;
-            p.onSwipeLayout(dx < 0 ? 1 : -1);
-        }
-    };
-    const onUp = () => {
-        g.current.active = false;
-    };
-
     // Sticker body gestures: one finger drags to move; two fingers pinch to resize and twist to rotate (iPad-native).
     const pointers = useRef(new Map<number, { x: number; y: number }>());
     const drag = useRef<string | null>(null);
@@ -163,10 +143,6 @@ export function FlagPreview(p: Props) {
             >
                 <div
                     ref={p.flagRef}
-                    onPointerDown={onDown}
-                    onPointerMove={onMove}
-                    onPointerUp={onUp}
-                    onPointerCancel={onUp}
                     style={{
                         width: "min(100%, 500px)",
                         aspectRatio: "3 / 2",
@@ -192,9 +168,7 @@ export function FlagPreview(p: Props) {
                                 // Transparent hit target only - the selection is drawn as an outline below, never a fill (keeps the real color true).
                                 const style: React.CSSProperties = "rect" in shape ? { ...common, left: `${shape.rect[0]}%`, top: `${shape.rect[1]}%`, width: `${shape.rect[2]}%`, height: `${shape.rect[3]}%` } : { ...common, inset: 0, clipPath: shape.clip };
                                 // pointerup (not click): iOS Safari won't fire click reliably inside a touch-action:none surface.
-                                const pick = () => {
-                                    if (!g.current.swiped) p.onPickBand(bi);
-                                };
+                                const pick = () => p.onPickBand(bi);
                                 return <button key={`b${bi}-${si}`} aria-label={`Pick stripe ${bi + 1} color`} aria-pressed={active} onPointerUp={pick} onClick={pick} style={style} />;
                             }),
                         )}

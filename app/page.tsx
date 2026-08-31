@@ -14,6 +14,8 @@ import MoonIcon from "@heroicons/react/24/outline/MoonIcon";
 import HeartIcon from "@heroicons/react/24/outline/HeartIcon";
 import Squares2X2Icon from "@heroicons/react/24/outline/Squares2X2Icon";
 import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
+import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
+import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
 
 // 17 distinct colors (+ the rainbow custom = 18 = exactly 3 rows of 6). No near-duplicates.
 const PRESET_COLORS = ["#E4002B", "#FF4D6D", "#FF7A00", "#FFC400", "#FFE100", "#A3D900", "#00A650", "#009B8E", "#00B5E2", "#0072CE", "#00247D", "#6A2FBF", "#B02FB0", "#8B5E34", "#000000", "#808080", "#FFFFFF"];
@@ -23,9 +25,10 @@ const CANVAS_MAX_PX = 1400; // cap html2canvas raster so huge emblems never blow
 type SvgIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 type EmblemEntry = { name: string; slug: string; Icon?: SvgIcon; svg?: string };
 type Panel = "idle" | "shape" | "stickers" | "save";
+type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v3";
+const APP_VERSION = "v4";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -165,6 +168,77 @@ export default function CountryMaker() {
         return () => window.removeEventListener("keydown", onKey);
     }, [em.selectedId, em.removePlaced]);
 
+    // ---- Undo / redo: debounced snapshots of the whole design (coalesces drags/slides into one step) ----
+    const snapNow = (): Snapshot => ({ layout, c1, c2, c3, rounded, countryName, placed: em.placed, customSvgs: em.customSvgs });
+    const past = useRef<Snapshot[]>([]);
+    const future = useRef<Snapshot[]>([]);
+    const lastSnap = useRef<Snapshot | null>(null);
+    const applying = useRef(false);
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
+    useEffect(() => {
+        if (lastSnap.current === null) {
+            lastSnap.current = snapNow();
+            return;
+        }
+        if (applying.current) {
+            applying.current = false;
+            lastSnap.current = snapNow();
+            return;
+        }
+        const t = setTimeout(() => {
+            past.current.push(lastSnap.current!);
+            if (past.current.length > 100) past.current.shift();
+            future.current = [];
+            lastSnap.current = snapNow();
+            setCanUndo(true);
+            setCanRedo(false);
+        }, 350);
+        return () => clearTimeout(t);
+    }, [layout, c1, c2, c3, rounded, countryName, em.placed, em.customSvgs]);
+
+    const applySnap = (s: Snapshot) => {
+        applying.current = true;
+        setLayout(s.layout);
+        setC1(s.c1);
+        setC2(s.c2);
+        setC3(s.c3);
+        setRounded(s.rounded);
+        setCountryName(s.countryName);
+        em.restore(s.placed, s.customSvgs);
+        setActiveBand(null);
+        setPanel("idle");
+    };
+    const undo = () => {
+        if (!past.current.length) return;
+        future.current.push(lastSnap.current!);
+        applySnap(past.current.pop()!);
+        setCanUndo(past.current.length > 0);
+        setCanRedo(true);
+    };
+    const redo = () => {
+        if (!future.current.length) return;
+        past.current.push(lastSnap.current!);
+        applySnap(future.current.pop()!);
+        setCanUndo(true);
+        setCanRedo(future.current.length > 0);
+    };
+    const undoRef = useRef(undo);
+    undoRef.current = undo;
+    const redoRef = useRef(redo);
+    redoRef.current = redo;
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+                e.preventDefault();
+                if (e.shiftKey) redoRef.current();
+                else undoRef.current();
+            }
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
+
     // What the control panel is focused on right now (one thing at a time).
     const view: "stripe" | "shape" | "stickers" | "save" | "sticker" | "idle" = activeBand !== null ? "stripe" : panel === "shape" ? "shape" : panel === "stickers" ? "stickers" : panel === "save" ? "save" : selected ? "sticker" : isLarge ? "stickers" : "idle";
 
@@ -183,14 +257,6 @@ export default function CountryMaker() {
         setActiveBand(null);
         setPanel("idle");
     };
-    const swipeLayout = (dir: 1 | -1) => {
-        const i = LAYOUTS.findIndex((l) => l.key === layout);
-        const next = LAYOUTS[(i + dir + LAYOUTS.length) % LAYOUTS.length].key;
-        setLayout(next);
-        setActiveBand(null);
-        em.setSelectedId(null);
-    };
-
     const normalizeEmblemName = (raw: string) =>
         raw
             .trim()
@@ -307,6 +373,14 @@ export default function CountryMaker() {
             <h1 className="sr-only">Country Maker - design your own country flag</h1>
             <main className="grid min-h-0 w-full flex-1 grid-cols-1 grid-rows-[minmax(0,42%)_minmax(0,1fr)] gap-3 mx-auto max-w-[1500px] md:gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(340px,1fr)] lg:grid-rows-1">
                 <section aria-label="Flag preview" className="relative min-h-0 bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col">
+                    <div className="absolute top-3 left-3 z-20 flex gap-1.5">
+                        <button onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo" className={cn("h-9 w-9 rounded-full flex items-center justify-center transition active:scale-90", canUndo ? "bg-white/10 hover:bg-white/20 text-white" : "bg-white/[0.04] text-zinc-600 cursor-default")}>
+                            <ArrowUturnLeftIcon className="w-5 h-5" />
+                        </button>
+                        <button onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo" className={cn("h-9 w-9 rounded-full flex items-center justify-center transition active:scale-90", canRedo ? "bg-white/10 hover:bg-white/20 text-white" : "bg-white/[0.04] text-zinc-600 cursor-default")}>
+                            <ArrowUturnRightIcon className="w-5 h-5" />
+                        </button>
+                    </div>
                     <div className="flex-1 min-h-0 flex items-center justify-center">
                         <FlagPreview
                             flagRef={flagRef}
@@ -329,7 +403,6 @@ export default function CountryMaker() {
                             updateEmblem={em.updateEmblem}
                             removePlaced={em.removePlaced}
                             renderEmblem={(ref, style, key) => renderEmblem(ref, style, key)}
-                            onSwipeLayout={swipeLayout}
                         />
                     </div>
                     {/* Landscape/desktop has spare room - show every flag shape here for one-tap switching. */}

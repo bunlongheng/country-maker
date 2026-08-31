@@ -37,7 +37,9 @@ export type LayoutKey =
     | "chevron-up"
     | "cross-thin"
     | "corner-br"
-    | "union";
+    | "union"
+    | "penta-h"
+    | "penta-v";
 
 export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "vertical", name: "Vertical Tricolor", bands: 3 },
@@ -76,6 +78,8 @@ export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "cross-thin", name: "Thin Cross", bands: 2 },
     { key: "corner-br", name: "Corner 2", bands: 2 },
     { key: "union", name: "Union Jack", bands: 3 },
+    { key: "penta-h", name: "5 Stripes", bands: 3 },
+    { key: "penta-v", name: "5 Bars", bands: 3 },
 ];
 
 export type FlagStyle = { baseStyle: CSSProperties; overlays: { clip: string; color: string }[] };
@@ -184,6 +188,10 @@ export function buildFlagStyle(layout: LayoutKey, c1: string, c2: string, c3: st
                     { clip: "polygon(45% 0, 55% 0, 55% 45%, 100% 45%, 100% 55%, 55% 55%, 55% 100%, 45% 100%, 45% 55%, 0 55%, 0 45%, 45% 45%)", color: c3 },
                 ],
             };
+        case "penta-h":
+            return { baseStyle: { background: `linear-gradient(to bottom, ${c1} 0 20%, ${c2} 20% 40%, ${c3} 40% 60%, ${c2} 60% 80%, ${c1} 80% 100%)` }, overlays: [] };
+        case "penta-v":
+            return { baseStyle: { background: `linear-gradient(to right, ${c1} 0 20%, ${c2} 20% 40%, ${c3} 40% 60%, ${c2} 60% 80%, ${c1} 80% 100%)` }, overlays: [] };
         default:
             return { baseStyle: { background: c1 }, overlays: [] };
     }
@@ -400,6 +408,10 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
             return [[WHOLE], [{ clip: "polygon(100% 100%, 54% 100%, 100% 34%)" }]];
         case "union":
             return [[{ rect: [3, 3, 15, 14] }], [{ rect: [20, 6, 12, 9] }], [{ rect: [46, 2, 8, 12] }]];
+        case "penta-h":
+            return [[{ rect: [0, 0, 100, 20] }, { rect: [0, 80, 100, 20] }], [{ rect: [0, 20, 100, 20] }, { rect: [0, 60, 100, 20] }], [{ rect: [0, 40, 100, 20] }]];
+        case "penta-v":
+            return [[{ rect: [0, 0, 20, 100] }, { rect: [80, 0, 20, 100] }], [{ rect: [20, 0, 20, 100] }, { rect: [60, 0, 20, 100] }], [{ rect: [40, 0, 20, 100] }]];
         default:
             return [[WHOLE]];
     }

@@ -56,5 +56,13 @@ export function useEmblems() {
         setSelectedId(list.length ? list[list.length - 1].id : null);
     };
 
-    return { placed, selectedId, setSelectedId, customSvgs, textEmblem, nextId, addEmblem, removePlaced, updateEmblem, updateText, clearAll, addCustomSvg, resetTo };
+    // Restore a saved snapshot (used by undo/redo) without selecting anything.
+    const restore = (list: Placed[], svgs: Record<string, string>) => {
+        setPlaced(list);
+        setCustomSvgs(svgs);
+        setTextEmblem("");
+        setSelectedId(null);
+    };
+
+    return { placed, selectedId, setSelectedId, customSvgs, textEmblem, nextId, addEmblem, removePlaced, updateEmblem, updateText, clearAll, addCustomSvg, resetTo, restore };
 }
