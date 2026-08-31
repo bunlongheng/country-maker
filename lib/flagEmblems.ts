@@ -2,6 +2,8 @@
 // dragon, crescent + star, etc.). Rendered via dangerouslySetInnerHTML with the
 // container's `color` mapped to `currentColor`, so a single emblem color drives fill.
 
+import { ANGKOR_WAT_SVG, DRUK_SVG } from "@/lib/emblemSvgs";
+
 export type FlagEmblem = { name: string; slug: string; svg: string };
 
 // Sol de Mayo style sun: alternating long/short triangular rays around a disc.
@@ -27,17 +29,6 @@ function buildSun(): string {
 
 const wrap = (viewBox: string, d: string) => `<svg viewBox="${viewBox}" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
 
-// Stylized 5-tower temple silhouette (Angkor Wat, Cambodia). Central lotus-bud
-// tower flanked by two mid and two outer towers over a stepped base.
-function buildTemple(): string {
-    const tower = (cx: number, w: number, baseY: number, shoulderY: number, tipY: number) => {
-        const midY = (shoulderY + tipY) / 2;
-        return `M${cx - w / 2} ${baseY} L${cx - w / 2} ${shoulderY} Q${cx - w / 2} ${midY} ${cx} ${tipY} Q${cx + w / 2} ${midY} ${cx + w / 2} ${shoulderY} L${cx + w / 2} ${baseY} Z`;
-    };
-    const d = tower(50, 17, 72, 38, 12) + tower(29, 13, 72, 46, 24) + tower(71, 13, 72, 46, 24) + tower(14, 10, 72, 54, 36) + tower(86, 10, 72, 54, 36) + "M8 70 L92 70 L92 79 L8 79 Z" + "M3 79 L97 79 L97 88 L3 88 Z";
-    return `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`;
-}
-
 // Compass "north star": a sharp 4-point star with smaller diagonal points.
 function buildNorthStar(): string {
     const cx = 50,
@@ -62,16 +53,9 @@ export const FLAG_EMBLEMS: FlagEmblem[] = [
     { name: "Fir Tree", slug: "fir-tree", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M50 8 L64 40 L36 40 Z M50 30 L74 64 L26 64 Z M50 54 L84 88 L16 88 Z M44 88 L56 88 L56 97 L44 97 Z"/></svg>` },
     { name: "Hammer", slug: "mjolnir", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M42 6 H58 V20 H42 Z M47 18 H53 V56 H47 Z M20 52 H80 V66 H20 Z M20 52 H34 V90 H20 Z M66 52 H80 V90 H66 Z"/></svg>` },
     { name: "Sun Cross", slug: "sun-cross", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="9"/><path d="M45.5 8 H54.5 V92 H45.5 Z M8 45.5 H92 V54.5 H8 Z"/></svg>` },
-    { name: "Temple", slug: "angkor-wat", svg: buildTemple() },
+    { name: "Angkor Wat", slug: "angkor-wat", svg: ANGKOR_WAT_SVG },
     { name: "Triangle", slug: "triangle", svg: `<svg viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M50 12 L88 84 L12 84 Z"/></svg>` },
-    {
-        name: "Dragon",
-        slug: "dragon",
-        svg: wrap(
-            "0 0 640 512",
-            "M352 124.5l-51.9-13c-6.5-1.6-11.3-7.1-12-13.8s2.8-13.1 8.7-16.1l40.8-20.4L294.4 28.8c-5.5-4.1-7.8-11.3-5.6-17.9S297.1 0 304 0L416 0l32 0 16 0c30.2 0 58.7 14.2 76.8 38.4l57.6 76.8c6.2 8.3 9.6 18.4 9.6 28.8c0 26.5-21.5 48-48 48l-21.5 0c-17 0-33.3-6.7-45.3-18.7L480 160l-32 0 0 21.5c0 24.8 12.8 47.9 33.8 61.1l106.6 66.6c32.1 20.1 51.6 55.2 51.6 93.1C640 462.9 590.9 512 530.2 512L496 512l-64 0L32.3 512c-3.3 0-6.6-.4-9.6-1.4C13.5 507.8 6 501 2.4 492.1C1 488.7 .2 485.2 0 481.4c-.2-3.7 .3-7.3 1.3-10.7c2.8-9.2 9.6-16.7 18.6-20.4c3-1.2 6.2-2 9.5-2.2L433.3 412c8.3-.7 14.7-7.7 14.7-16.1c0-4.3-1.7-8.4-4.7-11.4l-44.4-44.4c-30-30-46.9-70.7-46.9-113.1l0-45.5 0-57zM512 72.3c0-.1 0-.2 0-.3s0-.2 0-.3l0 .6zm-1.3 7.4L464.3 68.1c-.2 1.3-.3 2.6-.3 3.9c0 13.3 10.7 24 24 24c10.6 0 19.5-6.8 22.7-16.3zM130.9 116.5c16.3-14.5 40.4-16.2 58.5-4.1l130.6 87 0 27.5c0 32.8 8.4 64.8 24 93l-232 0c-6.7 0-12.7-4.2-15-10.4s-.5-13.3 4.6-17.7L171 232.3 18.4 255.8c-7 1.1-13.9-2.6-16.9-9s-1.5-14.1 3.8-18.8L130.9 116.5z",
-        ),
-    },
+    { name: "Dragon", slug: "dragon", svg: DRUK_SVG },
     {
         name: "Crescent",
         slug: "crescent-star",

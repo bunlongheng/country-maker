@@ -18,6 +18,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
     devIndicators: false,
+    // Dev only: let the dev server hand its JS/HMR to devices on the LAN (iPad testing over http://<lan-ip>:3020).
+    // Next 16 blocks cross-origin dev resources by default; ignored in production. Override the host via DEV_ORIGIN.
+    allowedDevOrigins: [process.env.DEV_ORIGIN || "10.0.0.218"],
     async headers() {
         return [
             { source: "/:path*", headers: securityHeaders },
