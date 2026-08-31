@@ -233,7 +233,8 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
         case "star-stripes":
             return [horizStripes(true), horizStripes(false), [{ rect: [0, 0, 40, 53.85] }]];
         case "nordic":
-            return [[WHOLE], [{ clip: "polygon(24% 0, 40% 0, 40% 39%, 100% 39%, 100% 61%, 40% 61%, 40% 100%, 24% 100%, 24% 61%, 0 61%, 0 39%, 24% 39%)" }]];
+            // Vertical bar sits at 26.88%-42.88% (background 32% pos, 16% wide); horizontal bar 39%-61%.
+            return [[WHOLE], [{ clip: "polygon(26.88% 0, 42.88% 0, 42.88% 39%, 100% 39%, 100% 61%, 42.88% 61%, 42.88% 100%, 26.88% 100%, 26.88% 61%, 0 61%, 0 39%, 26.88% 39%)" }]];
         case "saltire":
             return [[WHOLE], [{ clip: "polygon(0% 0%, 15% 0%, 100% 82%, 100% 100%, 85% 100%, 0% 18%)" }, { clip: "polygon(100% 0%, 100% 18%, 15% 100%, 0% 100%, 0% 82%, 85% 0%)" }]];
         case "diagonal":

@@ -1,7 +1,7 @@
 "use client";
 import { useRef } from "react";
 import type React from "react";
-import { EMBLEM_COLOR_DEFAULT, EMBLEM_SIZE_DEFAULT, type BandShape, type Placed } from "@/lib/flag";
+import { EMBLEM_COLOR_DEFAULT, EMBLEM_SIZE_DEFAULT, EMBLEM_SIZE_MIN, EMBLEM_SIZE_MAX, type BandShape, type Placed } from "@/lib/flag";
 
 type Props = {
     flagRef: React.RefObject<HTMLDivElement | null>;
@@ -17,15 +17,42 @@ type Props = {
     placed: Placed[];
     selectedId: string | null;
     onSelectEmblem: () => void;
-    startDrag: (e: React.PointerEvent, id: string) => void;
-    moveDrag: (e: React.PointerEvent) => void;
-    endDrag: () => void;
+    setSelected: (id: string) => void;
+    updateEmblem: (id: string, patch: { size?: number; rot?: number; color?: string; x?: number; y?: number }) => void;
     removePlaced: (id: string) => void;
     renderEmblem: (ref: string, style: React.CSSProperties, key?: React.Key) => React.ReactNode;
 };
 
 // Rough area of a band's region, so we can paint big fields first and small shapes on top (correct hit order).
 const areaOf = (shapes: BandShape[]) => shapes.reduce((a, s) => a + ("rect" in s ? s.rect[2] * s.rect[3] : 2500), 0);
+
+// Draw a red OUTLINE that traces a stripe's exact shape (never a fill, so the real color stays true).
+function ShapeOutline({ shape }: { shape: BandShape }) {
+    const stroke = { fill: "none", stroke: "#ef4444", strokeWidth: 3, vectorEffect: "non-scaling-stroke" as const, strokeLinejoin: "round" as const };
+    if ("rect" in shape) {
+        const [x, y, w, h] = shape.rect;
+        return <rect x={x} y={y} width={w} height={h} rx={1} {...stroke} />;
+    }
+    if (shape.clip.startsWith("polygon")) {
+        const pts = shape.clip
+            .slice(shape.clip.indexOf("(") + 1, shape.clip.lastIndexOf(")"))
+            .split(",")
+            .map((pair) =>
+                pair
+                    .trim()
+                    .split(/\s+/)
+                    .map((v) => parseFloat(v))
+                    .join(","),
+            )
+            .join(" ");
+        return <polygon points={pts} {...stroke} />;
+    }
+    if (shape.clip.startsWith("ellipse")) {
+        const [rx, ry, cx, cy] = (shape.clip.match(/[\d.]+/g) || []).map(Number);
+        return <ellipse cx={cx} cy={cy} rx={rx} ry={ry} {...stroke} />;
+    }
+    return null;
+}
 
 export function FlagPreview(p: Props) {
     // One gesture tracker on the flag: a clear horizontal drag swipes to the next/prev shape; a tap selects a stripe.
@@ -45,6 +72,52 @@ export function FlagPreview(p: Props) {
     };
     const onUp = () => {
         g.current.active = false;
+    };
+
+    // Sticker body gestures: one finger drags to move; two fingers pinch to resize and twist to rotate (iPad-native).
+    const pointers = useRef(new Map<number, { x: number; y: number }>());
+    const drag = useRef<string | null>(null);
+    const pinch = useRef<{ id: string; d0: number; a0: number; s0: number; r0: number } | null>(null);
+    const twoPts = () => {
+        const v = [...pointers.current.values()];
+        return v.length >= 2 ? ([v[0], v[1]] as const) : null;
+    };
+    const onStickerDown = (e: React.PointerEvent, it: Placed) => {
+        e.stopPropagation();
+        p.onSelectEmblem();
+        p.setSelected(it.id);
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const pts = twoPts();
+        if (pts) {
+            const d0 = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+            const a0 = (Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * 180) / Math.PI;
+            pinch.current = { id: it.id, d0, a0, s0: it.size ?? EMBLEM_SIZE_DEFAULT, r0: it.rot ?? 0 };
+            drag.current = null;
+        } else {
+            drag.current = it.id;
+        }
+    };
+    const onStickerMove = (e: React.PointerEvent) => {
+        if (!pointers.current.has(e.pointerId)) return;
+        pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const pc = pinch.current;
+        const pts = twoPts();
+        if (pc && pts) {
+            const d = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+            const a = (Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * 180) / Math.PI;
+            const size = Math.max(EMBLEM_SIZE_MIN, Math.min(EMBLEM_SIZE_MAX, Math.round(pc.s0 * (d / pc.d0))));
+            const rot = ((((pc.r0 + (a - pc.a0) + 180) % 360) + 360) % 360) - 180;
+            p.updateEmblem(pc.id, { size, rot: Math.round(rot) });
+        } else if (drag.current && p.flagRef.current) {
+            const r = p.flagRef.current.getBoundingClientRect();
+            p.updateEmblem(drag.current, { x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
+        }
+    };
+    const onStickerUp = (e: React.PointerEvent) => {
+        pointers.current.delete(e.pointerId);
+        if (pointers.current.size < 2) pinch.current = null;
+        if (pointers.current.size === 0) drag.current = null;
     };
 
     // Draw larger regions first so smaller ones (crosses, cantons, inner boxes) sit on top and catch their own taps.
@@ -93,11 +166,24 @@ export function FlagPreview(p: Props) {
                             shapes.map((shape, si) => {
                                 const active = p.activeBand === bi;
                                 const common: React.CSSProperties = { position: "absolute", zIndex: 2, cursor: "pointer", border: "none", background: "transparent", padding: 0 };
-                                const style: React.CSSProperties =
-                                    "rect" in shape ? { ...common, left: `${shape.rect[0]}%`, top: `${shape.rect[1]}%`, width: `${shape.rect[2]}%`, height: `${shape.rect[3]}%`, ...(active ? { background: "rgba(59,130,246,0.32)", boxShadow: "inset 0 0 0 3px #3b82f6" } : {}) } : { ...common, inset: 0, clipPath: shape.clip, ...(active ? { background: "rgba(59,130,246,0.42)" } : {}) };
-                                return <button key={`b${bi}-${si}`} aria-label={`Pick stripe ${bi + 1} color`} aria-pressed={active} className={active ? "cm-band-hl" : undefined} onClick={() => (g.current.swiped ? null : p.onPickBand(bi))} style={style} />;
+                                // Transparent hit target only - the selection is drawn as an outline below, never a fill (keeps the real color true).
+                                const style: React.CSSProperties = "rect" in shape ? { ...common, left: `${shape.rect[0]}%`, top: `${shape.rect[1]}%`, width: `${shape.rect[2]}%`, height: `${shape.rect[3]}%` } : { ...common, inset: 0, clipPath: shape.clip };
+                                // pointerup (not click): iOS Safari won't fire click reliably inside a touch-action:none surface.
+                                const pick = () => {
+                                    if (!g.current.swiped) p.onPickBand(bi);
+                                };
+                                return <button key={`b${bi}-${si}`} aria-label={`Pick stripe ${bi + 1} color`} aria-pressed={active} onPointerUp={pick} onClick={pick} style={style} />;
                             }),
                         )}
+
+                    {/* Red outline tracing the selected stripe's real shape - a border, not a fill. */}
+                    {!p.exporting && p.activeBand !== null && p.regions[p.activeBand] && (
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 3, pointerEvents: "none", overflow: "visible" }}>
+                            {p.regions[p.activeBand].map((shape, i) => (
+                                <ShapeOutline key={i} shape={shape} />
+                            ))}
+                        </svg>
+                    )}
 
                     {p.placed.map((it) => {
                         const isSel = p.selectedId === it.id && !p.exporting;
@@ -117,22 +203,11 @@ export function FlagPreview(p: Props) {
                         const rotor: React.CSSProperties = {
                             transform: `rotate(${rot}deg)`,
                             lineHeight: 0,
-                            ...(isSel ? { outline: "2.5px solid #3b82f6", outlineOffset: "6px", borderRadius: "8px" } : {}),
+                            ...(isSel ? { outline: "2.5px solid #ef4444", outlineOffset: "6px", borderRadius: "8px" } : {}),
                         };
                         const paint: React.CSSProperties = { color, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.28))", display: "block", pointerEvents: "none" };
                         return (
-                            <div
-                                key={it.id}
-                                style={wrap}
-                                onPointerDown={(e) => {
-                                    e.stopPropagation();
-                                    p.onSelectEmblem();
-                                    p.startDrag(e, it.id);
-                                }}
-                                onPointerMove={p.moveDrag}
-                                onPointerUp={p.endDrag}
-                                onPointerCancel={p.endDrag}
-                            >
+                            <div key={it.id} style={wrap} onPointerDown={(e) => onStickerDown(e, it)} onPointerMove={onStickerMove} onPointerUp={onStickerUp} onPointerCancel={onStickerUp}>
                                 <div style={rotor}>{it.kind === "text" ? <span style={{ ...paint, fontWeight: 800, fontSize: `${size * 0.9}px`, lineHeight: 1, whiteSpace: "nowrap" }}>{it.ref}</span> : p.renderEmblem(it.ref, { ...paint, width: `${size}px`, height: `${size}px` })}</div>
                                 {isSel && (
                                     <button
