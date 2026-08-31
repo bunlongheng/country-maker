@@ -25,7 +25,7 @@ type EmblemEntry = { name: string; slug: string; Icon?: SvgIcon; svg?: string };
 type Panel = "idle" | "shape" | "stickers" | "save";
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v1";
+const APP_VERSION = "v2";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -321,8 +321,9 @@ export default function CountryMaker() {
                             placed={em.placed}
                             selectedId={em.selectedId}
                             onSelectEmblem={() => {
+                                // Tapping a sticker on the flag always brings up its color menu (closes the picker).
                                 setActiveBand(null);
-                                if (panel !== "stickers") setPanel("idle");
+                                setPanel("idle");
                             }}
                             setSelected={em.setSelectedId}
                             updateEmblem={em.updateEmblem}
