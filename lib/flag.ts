@@ -207,6 +207,16 @@ export function bandHotspots(layout: LayoutKey): { x: number; y: number }[] {
 export type BandShape = { rect: [number, number, number, number] } | { clip: string };
 const WHOLE: BandShape = { rect: [0, 0, 100, 100] };
 
+const STRIPE = 100 / 13; // 13 alternating stripes (USA-style), ~7.6923% each
+const horizStripes = (even: boolean): BandShape[] =>
+    Array.from({ length: 13 }, (_, i) => i)
+        .filter((i) => i % 2 === (even ? 0 : 1))
+        .map((i) => ({ rect: [0, i * STRIPE, 100, STRIPE] }) as BandShape);
+const vertStripes = (even: boolean): BandShape[] =>
+    Array.from({ length: 13 }, (_, i) => i)
+        .filter((i) => i % 2 === (even ? 0 : 1))
+        .map((i) => ({ rect: [i * STRIPE, 0, STRIPE, 100] }) as BandShape);
+
 /** The actual area(s) each band's color fills, so the picker can light up the whole stripe (not a tiny dot). */
 export function bandRegions(layout: LayoutKey): BandShape[][] {
     switch (layout) {
@@ -219,9 +229,9 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
         case "horizontal-bi":
             return [[{ rect: [0, 0, 100, 50] }], [{ rect: [0, 50, 100, 50] }]];
         case "stripes":
-            return [[{ rect: [0, 0, 100, 7.69] }], [{ rect: [0, 7.69, 100, 7.69] }]];
+            return [horizStripes(true), horizStripes(false)];
         case "star-stripes":
-            return [[{ rect: [0, 53.85, 100, 7.69] }], [{ rect: [0, 61.54, 100, 7.69] }], [{ rect: [0, 0, 40, 53.85] }]];
+            return [horizStripes(true), horizStripes(false), [{ rect: [0, 0, 40, 53.85] }]];
         case "nordic":
             return [[WHOLE], [{ clip: "polygon(24% 0, 40% 0, 40% 39%, 100% 39%, 100% 61%, 40% 61%, 40% 100%, 24% 100%, 24% 61%, 0 61%, 0 39%, 24% 39%)" }]];
         case "saltire":
@@ -240,7 +250,7 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
                 [{ rect: [50, 0, 50, 50] }, { rect: [0, 50, 50, 50] }],
             ];
         case "v-stripes":
-            return [[{ rect: [0, 0, 7.69, 100] }], [{ rect: [7.69, 0, 7.69, 100] }]];
+            return [vertStripes(true), vertStripes(false)];
         case "pale":
             return [[WHOLE], [{ rect: [33.33, 0, 33.34, 100] }]];
         case "fess":
