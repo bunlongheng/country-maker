@@ -14,9 +14,9 @@ export function useEmblems() {
     const [customSvgs, setCustomSvgs] = useState<Record<string, string>>({});
     const [textEmblem, setTextEmblem] = useState("");
 
-    const addEmblem = (ref: string) => {
+    const addEmblem = (ref: string, color?: string) => {
         const id = nextId();
-        setPlaced((p) => addEmblemAt(p, id, ref, lastColor.current, lastSize.current));
+        setPlaced((p) => addEmblemAt(p, id, ref, color ?? lastColor.current, lastSize.current));
         setSelectedId(id);
     };
 
