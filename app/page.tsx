@@ -28,7 +28,7 @@ type Panel = "idle" | "shape" | "stickers" | "save";
 type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v7";
+const APP_VERSION = "v8";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -399,7 +399,7 @@ export default function CountryMaker() {
                             <ArrowUturnRightIcon className="w-5 h-5" />
                         </button>
                     </div>
-                    <div className="flex-1 min-h-0 flex items-center justify-center">
+                    <div className="flex-[3] min-h-0 flex items-center justify-center">
                         <FlagPreview
                             flagRef={flagRef}
                             exportRef={exportRef}
@@ -428,15 +428,15 @@ export default function CountryMaker() {
                         />
                     </div>
                     {/* Landscape/desktop has spare room - show every flag shape here for one-tap switching. */}
-                    <div className="hidden lg:block shrink-0 border-t border-white/5 px-4 py-3">
-                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2">Flag shape</div>
-                        <div className="grid grid-cols-7 gap-1.5 max-h-[32vh] overflow-y-auto pr-1">
+                    <div className="hidden lg:flex lg:flex-col flex-[2] min-h-0 border-t border-white/5 px-4 py-3">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2 shrink-0">Flag shape</div>
+                        <div className="grid flex-1 min-h-0 grid-cols-7 gap-1.5" style={{ gridAutoRows: "minmax(0, 1fr)" }}>
                             {LAYOUTS.map((l) => {
                                 const mini = buildFlagStyle(l.key, c1, c2, c3);
                                 const active = layout === l.key;
                                 return (
-                                    <button key={l.key} onClick={() => chooseLayout(l.key)} aria-pressed={active} aria-label={`Use ${l.name} shape`} title={l.name} className={cn("rounded-md overflow-hidden border transition active:scale-95", active ? "border-white ring-2 ring-white" : "border-zinc-700 hover:border-zinc-500")}>
-                                        <div className="relative w-full" style={{ aspectRatio: "3 / 2", ...mini.baseStyle }}>
+                                    <button key={l.key} onClick={() => chooseLayout(l.key)} aria-pressed={active} aria-label={`Use ${l.name} shape`} title={l.name} className={cn("flex items-center justify-center overflow-hidden rounded border transition active:scale-95", active ? "border-white ring-2 ring-white" : "border-zinc-700 hover:border-zinc-500")}>
+                                        <div className="relative rounded-sm overflow-hidden" style={{ height: "100%", aspectRatio: "3 / 2", maxWidth: "100%", ...mini.baseStyle }}>
                                             {mini.overlays.map((ov, i) => (
                                                 <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip }} />
                                             ))}
@@ -449,7 +449,7 @@ export default function CountryMaker() {
                 </section>
 
                 <section className="min-h-0 bg-[#1c1c1e] rounded-[2rem] border border-white/5 overflow-hidden flex flex-col">
-                    <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 md:p-6">
+                    <div className="flex-1 min-h-0 overflow-hidden p-4 sm:p-5 md:p-6">
                         {view === "stripe" && activeBand !== null && (
                             <div>
                                 <PanelHeader title={`Stripe ${activeBand + 1} color`} onClose={() => setActiveBand(null)} />
@@ -462,31 +462,20 @@ export default function CountryMaker() {
                             <div>
                                 <PanelHeader title="Your sticker" onClose={() => em.setSelectedId(null)} />
                                 <ColorGrid value={selected.color ?? EMBLEM_COLOR_DEFAULT} onPick={(color) => em.updateEmblem(selected.id, { color })} />
-                                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400 mt-6 mb-2.5">Add another</div>
-                                <div className="grid grid-cols-6 gap-2.5">
-                                    {EMBLEM_REGISTRY.map((item) => {
-                                        const onFlag = em.placed.some((pl) => pl.ref === item.name);
-                                        return (
-                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("aspect-square rounded-xl flex items-center justify-center transition active:scale-90", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}>
-                                                {renderEmblem(item, { width: 22, height: 22, color: "currentColor" })}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                <p className="text-xs text-zinc-500 mt-4 text-center">Pinch to resize, twist to spin, drag to move. Tap Stickers to add more.</p>
                             </div>
                         )}
 
                         {view === "shape" && (
-                            <div>
+                            <div className="h-full flex flex-col">
                                 <PanelHeader title="Pick a shape" onClose={() => setPanel("idle")} />
-                                <p className="text-xs text-zinc-500 mb-3">Tap the one you like.</p>
-                                <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
+                                <div className="grid flex-1 min-h-0 grid-cols-5 gap-1.5" style={{ gridAutoRows: "minmax(0, 1fr)" }}>
                                     {LAYOUTS.map((l) => {
                                         const mini = buildFlagStyle(l.key, c1, c2, c3);
                                         const active = layout === l.key;
                                         return (
-                                            <button key={l.key} onClick={() => chooseLayout(l.key)} aria-pressed={active} aria-label={l.name} title={l.name} className={cn("p-1 rounded-lg border transition active:scale-95", active ? "bg-white border-white ring-2 ring-white" : "border-zinc-700 hover:border-zinc-500")}>
-                                                <div className="relative w-full rounded-sm overflow-hidden ring-1 ring-black/10" style={{ aspectRatio: "3 / 2", ...mini.baseStyle }}>
+                                            <button key={l.key} onClick={() => chooseLayout(l.key)} aria-pressed={active} aria-label={l.name} title={l.name} className={cn("flex items-center justify-center overflow-hidden rounded-md border p-0.5 transition active:scale-95", active ? "bg-white border-white ring-2 ring-white" : "border-zinc-700 hover:border-zinc-500")}>
+                                                <div className="relative rounded-sm overflow-hidden ring-1 ring-black/10" style={{ height: "100%", aspectRatio: "3 / 2", maxWidth: "100%", ...mini.baseStyle }}>
                                                     {mini.overlays.map((ov, i) => (
                                                         <div key={i} style={{ position: "absolute", inset: 0, background: ov.color, clipPath: ov.clip }} />
                                                     ))}
@@ -499,8 +488,8 @@ export default function CountryMaker() {
                         )}
 
                         {view === "stickers" && (
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
+                            <div className="h-full flex flex-col">
+                                <div className="flex items-center justify-between mb-3 shrink-0">
                                     <h2 className="text-base sm:text-lg font-bold text-white">Add a sticker</h2>
                                     <div className="flex items-center gap-2">
                                         <button onClick={em.clearAll} aria-label="Remove all emblems" className="h-9 px-3 rounded-full border border-white/10 text-zinc-400 hover:text-white text-[11px] font-bold uppercase transition">
@@ -511,13 +500,12 @@ export default function CountryMaker() {
                                         </button>
                                     </div>
                                 </div>
-                                <p className="text-xs text-zinc-500 mb-3">{em.placed.length} on the flag. Tap one to add - then tap it on the flag to color, size, or spin it.</p>
-
-                                <div className="grid grid-cols-6 lg:grid-cols-7 gap-2">
+                                <p className="text-xs text-zinc-500 mb-2 shrink-0">{em.placed.length} on the flag - tap one to add.</p>
+                                <div className="grid flex-1 min-h-0 grid-cols-6 lg:grid-cols-7 gap-1.5" style={{ gridAutoRows: "minmax(0, 1fr)" }}>
                                     {EMBLEM_REGISTRY.map((item) => {
                                         const onFlag = em.placed.some((pl) => pl.ref === item.name);
                                         return (
-                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("aspect-square rounded-lg transition flex justify-center items-center active:scale-90", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}>
+                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("rounded-md transition flex justify-center items-center active:scale-90", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}>
                                                 {renderEmblem(item, { width: 20, height: 20, color: "currentColor" })}
                                             </button>
                                         );
