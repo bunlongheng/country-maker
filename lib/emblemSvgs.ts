@@ -39,7 +39,7 @@ export const COUNTRY_EMBLEMS: { name: string; slug: string; svg: string }[] = [
         slug: "star-circle",
         svg: '<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-tn" viewBox="185.0 104.8 269.1 269.1" fill="currentColor"><g>\n  \n  <path fill="currentColor" d="M320 119.2a1 1 0 0 0-1 240.3 1 1 0 0 0 1-240.3M392 293a90 90 0 1 1 0-107 72 72 0 1 0 0 107m-4.7-21.7-37.4-12.1-23.1 31.8v-39.3l-37.4-12.2 37.4-12.2V188l23.1 31.8 37.4-12.1-23.1 31.8z"></path>\n</g></svg>',
     },
-    { name: "Crescent", slug: "crescent-mv", svg: '<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-mv" viewBox="96.0 96.0 448.0 288.0" fill="currentColor"><g>\n  \n  <path fill="currentColor" d="M120 120h400v240H120z"></path>\n  <circle cx="350" cy="240" r="80" fill="currentColor"></circle>\n  <circle cx="380" cy="240" r="80" fill="currentColor"></circle>\n</g></svg>' },
+    { name: "Half Moon", slug: "crescent-mv", svg: '<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-mv" viewBox="96.0 96.0 448.0 288.0" fill="currentColor"><g>\n  \n  <path fill="currentColor" d="M120 120h400v240H120z"></path>\n  <circle cx="350" cy="240" r="80" fill="currentColor"></circle>\n  <circle cx="380" cy="240" r="80" fill="currentColor"></circle>\n</g></svg>' },
     {
         name: "Crescent Moon",
         slug: "crescent-mr",
