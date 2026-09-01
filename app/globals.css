@@ -9,8 +9,12 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-html {
-    scroll-behavior: smooth;
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+    /* Lock the page: no document scroll and no iOS rubber-band / overscroll bounce. */
+    overscroll-behavior: none;
 }
 
 body {
