@@ -86,6 +86,21 @@ export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
 
 export type FlagStyle = { baseStyle: CSSProperties; overlays: { clip: string; color: string }[] };
 
+// A horizontal wavy band centred at yc% with height h%, sinusoidal top/bottom edges.
+function waveBand(yc: number, h: number, amp: number, waves: number): string {
+    const steps = 20;
+    const pts: string[] = [];
+    for (let i = 0; i <= steps; i++) {
+        const x = (i / steps) * 100;
+        pts.push(`${x.toFixed(1)}% ${(yc - h / 2 + amp * Math.sin((x / 100) * waves * 2 * Math.PI)).toFixed(1)}%`);
+    }
+    for (let i = steps; i >= 0; i--) {
+        const x = (i / steps) * 100;
+        pts.push(`${x.toFixed(1)}% ${(yc + h / 2 + amp * Math.sin((x / 100) * waves * 2 * Math.PI)).toFixed(1)}%`);
+    }
+    return `polygon(${pts.join(", ")})`;
+}
+
 /** Map a layout + up to three band colors to a CSS background + optional clip-path overlays. Pure. */
 export function buildFlagStyle(layout: LayoutKey, c1: string, c2: string, c3: string): FlagStyle {
     const stripes = `repeating-linear-gradient(to bottom, ${c1} 0 7.6923%, ${c2} 7.6923% 15.3846%)`;
@@ -195,8 +210,15 @@ export function buildFlagStyle(layout: LayoutKey, c1: string, c2: string, c3: st
         case "penta-v":
             return { baseStyle: { background: `linear-gradient(to right, ${c1} 0 20%, ${c2} 20% 40%, ${c3} 40% 60%, ${c2} 60% 80%, ${c1} 80% 100%)` }, overlays: [] };
         case "kiribati":
-            // Base for the Kiribati flag: red top (add the bird sticker), sea stripes below.
-            return { baseStyle: { background: `linear-gradient(to bottom, ${c1} 0 50%, ${c2} 50% 58.33%, ${c3} 58.33% 66.66%, ${c2} 66.66% 75%, ${c3} 75% 83.33%, ${c2} 83.33% 91.66%, ${c3} 91.66% 100%)` }, overlays: [] };
+            // Base for the Kiribati flag: red top (add the bird sticker), wavy sea below (white with blue waves).
+            return {
+                baseStyle: { background: `linear-gradient(to bottom, ${c1} 0 50%, ${c2} 50% 100%)` },
+                overlays: [
+                    { clip: waveBand(57, 8.5, 2.5, 4), color: c3 },
+                    { clip: waveBand(73, 8.5, 2.5, 4), color: c3 },
+                    { clip: waveBand(89, 8.5, 2.5, 4), color: c3 },
+                ],
+            };
         default:
             return { baseStyle: { background: c1 }, overlays: [] };
     }
@@ -418,7 +440,7 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
         case "penta-v":
             return [[{ rect: [0, 0, 20, 100] }, { rect: [80, 0, 20, 100] }], [{ rect: [20, 0, 20, 100] }, { rect: [60, 0, 20, 100] }], [{ rect: [40, 0, 20, 100] }]];
         case "kiribati":
-            return [[{ rect: [0, 0, 100, 50] }], [{ rect: [0, 50, 100, 8.33] }, { rect: [0, 66.66, 100, 8.33] }, { rect: [0, 83.33, 100, 8.33] }], [{ rect: [0, 58.33, 100, 8.33] }, { rect: [0, 75, 100, 8.33] }, { rect: [0, 91.66, 100, 8.33] }]];
+            return [[{ rect: [0, 0, 100, 50] }], [{ rect: [0, 50, 100, 5] }, { rect: [0, 64, 100, 5] }, { rect: [0, 96, 100, 4] }], [{ rect: [0, 55, 100, 6] }, { rect: [0, 71, 100, 6] }, { rect: [0, 87, 100, 6] }]];
         default:
             return [[WHOLE]];
     }
