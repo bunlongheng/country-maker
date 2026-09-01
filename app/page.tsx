@@ -28,7 +28,7 @@ type Panel = "idle" | "shape" | "stickers" | "save";
 type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v8";
+const APP_VERSION = "v9";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
