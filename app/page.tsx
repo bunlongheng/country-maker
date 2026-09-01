@@ -28,9 +28,12 @@ type Panel = "idle" | "shape" | "stickers" | "save";
 type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v10";
+const APP_VERSION = "v11";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
+
+// Some emblems look right in a specific color by default (Angkor Wat is white on the Cambodia flag).
+const EMBLEM_DEFAULT_COLORS: Record<string, string> = { "Angkor Wat": "#FFFFFF" };
 
 // Is a hex color light enough that a dark checkmark/ring reads better than a white one?
 const isLightColor = (hex: string) => {
@@ -505,7 +508,13 @@ export default function CountryMaker() {
                                     {EMBLEM_REGISTRY.map((item) => {
                                         const onFlag = em.placed.some((pl) => pl.ref === item.name);
                                         return (
-                                            <button key={item.name} onClick={() => em.addEmblem(item.name)} aria-label={`Add ${item.name} emblem to flag`} title={`Add ${item.name}`} className={cn("rounded-md transition flex justify-center items-center active:scale-90", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}>
+                                            <button
+                                                key={item.name}
+                                                onClick={() => em.addEmblem(item.name, EMBLEM_DEFAULT_COLORS[item.name])}
+                                                aria-label={`Add ${item.name} emblem to flag`}
+                                                title={`Add ${item.name}`}
+                                                className={cn("rounded-md transition flex justify-center items-center active:scale-90", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}
+                                            >
                                                 {renderEmblem(item, { width: 20, height: 20, color: "currentColor" })}
                                             </button>
                                         );
