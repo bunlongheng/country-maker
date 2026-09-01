@@ -23,7 +23,7 @@ test("build a flag: add stickers, rename, download with name", async ({ page }) 
     await page.getByPlaceholder("Republic of ...").fill("Kingdom of Dragons");
 
     // download and assert the PNG filename comes from the name
-    const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download Flag" }).click()]);
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save / Share" }).click()]);
     expect(dl.suggestedFilename()).toBe("kingdom-of-dragons.png");
 });
 
@@ -37,6 +37,6 @@ test("no sticker, switch shapes, still downloads", async ({ page }) => {
     await page.getByRole("button", { name: "Stars + Stripes", exact: true }).click();
 
     await page.getByRole("button", { name: "Save", exact: true }).click();
-    const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download Flag" }).click()]);
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save / Share" }).click()]);
     expect(dl.suggestedFilename()).toMatch(/\.png$/);
 });

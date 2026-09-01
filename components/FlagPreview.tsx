@@ -13,6 +13,7 @@ type Props = {
     regions: BandShape[][];
     activeBand: number | null;
     onPickBand: (i: number) => void;
+    onDeselect: () => void;
     placed: Placed[];
     selectedId: string | null;
     onSelectEmblem: () => void;
@@ -126,10 +127,15 @@ export function FlagPreview(p: Props) {
     // Draw larger regions first so smaller ones (crosses, cantons, inner boxes) sit on top and catch their own taps.
     const ordered = p.regions.map((shapes, bi) => ({ bi, shapes })).sort((a, b) => areaOf(b.shapes) - areaOf(a.shapes));
 
+    // Tapping the empty space around the flag deselects everything, leaving a clean flag.
+    const clearIfBackground = (e: React.PointerEvent) => {
+        if (e.target === e.currentTarget) p.onDeselect();
+    };
     return (
-        <div className="h-full w-full flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="h-full w-full flex items-center justify-center p-4 sm:p-6 lg:p-8" onPointerDown={clearIfBackground}>
             <div
                 ref={p.exportRef}
+                onPointerDown={clearIfBackground}
                 style={{
                     display: "flex",
                     flexDirection: "column",
