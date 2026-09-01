@@ -40,7 +40,9 @@ export type LayoutKey =
     | "union"
     | "penta-h"
     | "penta-v"
-    | "kiribati";
+    | "kiribati"
+    | "nordic2"
+    | "greece";
 
 export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "vertical", name: "Vertical Tricolor", bands: 3 },
@@ -50,14 +52,14 @@ export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "stripes", name: "Stripes (USA)", bands: 2 },
     { key: "star-stripes", name: "Stars + Stripes", bands: 3 },
     { key: "nordic", name: "Nordic Cross", bands: 2 },
+    { key: "nordic2", name: "Norway Cross", bands: 3 },
+    { key: "greece", name: "Greece", bands: 2 },
     { key: "saltire", name: "X Saltire", bands: 2 },
     { key: "diagonal", name: "Diagonal Split", bands: 2 },
     { key: "chevron", name: "Chevron", bands: 2 },
     { key: "disc", name: "Sun Disc (Japan)", bands: 2 },
     { key: "canton", name: "Canton + Field", bands: 3 },
-    { key: "quadrant", name: "Quadrants", bands: 2 },
     { key: "solid", name: "Solid", bands: 1 },
-    { key: "v-stripes", name: "Vertical Stripes", bands: 2 },
     { key: "pale", name: "Center Pale", bands: 2 },
     { key: "fess", name: "Center Fess", bands: 2 },
     { key: "cross", name: "Centered Cross", bands: 2 },
@@ -65,22 +67,14 @@ export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "bend", name: "Diagonal Bend", bands: 2 },
     { key: "diamond", name: "Diamond", bands: 2 },
     { key: "triangle-hoist", name: "Triangle", bands: 3 },
-    { key: "pile", name: "Pile", bands: 2 },
-    { key: "chevron-r", name: "Right Chevron", bands: 2 },
     { key: "spanish", name: "Spanish Fess", bands: 2 },
     { key: "pale-wide", name: "Wide Pale", bands: 2 },
-    { key: "x-quad", name: "X Quads", bands: 2 },
     { key: "bend-up", name: "Rising Bend", bands: 2 },
-    { key: "corner", name: "Corner", bands: 2 },
     { key: "bahrain", name: "Serrated", bands: 2 },
     { key: "seychelles", name: "Rays", bands: 3 },
     { key: "belarus", name: "Ornament", bands: 3 },
-    { key: "chevron-up", name: "Up Chevron", bands: 2 },
-    { key: "cross-thin", name: "Thin Cross", bands: 2 },
-    { key: "corner-br", name: "Corner 2", bands: 2 },
     { key: "union", name: "Union Jack", bands: 3 },
     { key: "penta-h", name: "5 Stripes", bands: 3 },
-    { key: "penta-v", name: "5 Bars", bands: 3 },
     { key: "kiribati", name: "Kiribati", bands: 3 },
 ];
 
@@ -218,6 +212,22 @@ export function buildFlagStyle(layout: LayoutKey, c1: string, c2: string, c3: st
                     { clip: waveBand(73, 8.5, 2.5, 4), color: c3 },
                     { clip: waveBand(89, 8.5, 2.5, 4), color: c3 },
                 ],
+            };
+        case "nordic2":
+            // Norway/Iceland: a coloured cross (c3) fimbriated in white (c2) on a coloured field (c1).
+            return {
+                baseStyle: {
+                    background: `linear-gradient(${c3},${c3}) 0 50% / 100% 12% no-repeat, linear-gradient(${c3},${c3}) 32.95% 0 / 12% 100% no-repeat, linear-gradient(${c2},${c2}) 0 50% / 100% 24% no-repeat, linear-gradient(${c2},${c2}) 30.26% 0 / 24% 100% no-repeat, ${c1}`,
+                },
+                overlays: [],
+            };
+        case "greece":
+            // Greece: 9 blue/white stripes with a blue canton carrying a white cross.
+            return {
+                baseStyle: {
+                    background: `linear-gradient(${c1},${c1}) 16% 0 / 7.4% 55.55% no-repeat, linear-gradient(${c1},${c1}) 0 25% / 37% 11.11% no-repeat, linear-gradient(${c2},${c2}) 0 0 / 37% 55.55% no-repeat, repeating-linear-gradient(to bottom, ${c2} 0 11.111%, ${c1} 11.111% 22.222%)`,
+                },
+                overlays: [],
             };
         default:
             return { baseStyle: { background: c1 }, overlays: [] };
@@ -441,6 +451,15 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
             return [[{ rect: [0, 0, 20, 100] }, { rect: [80, 0, 20, 100] }], [{ rect: [20, 0, 20, 100] }, { rect: [60, 0, 20, 100] }], [{ rect: [40, 0, 20, 100] }]];
         case "kiribati":
             return [[{ rect: [0, 0, 100, 50] }], [{ rect: [0, 50, 100, 5] }, { rect: [0, 64, 100, 5] }, { rect: [0, 96, 100, 4] }], [{ rect: [0, 55, 100, 6] }, { rect: [0, 71, 100, 6] }, { rect: [0, 87, 100, 6] }]];
+        case "nordic2":
+            // White fimbriation band (c2) either side of the coloured cross; picker lights the cross area.
+            return [[WHOLE], [{ clip: "polygon(24.26% 0, 48.26% 0, 48.26% 38%, 100% 38%, 100% 62%, 48.26% 62%, 48.26% 100%, 24.26% 100%, 24.26% 62%, 0 62%, 0 38%, 24.26% 38%)" }], [{ clip: "polygon(30.26% 0, 42.26% 0, 42.26% 44%, 100% 44%, 100% 56%, 42.26% 56%, 42.26% 100%, 30.26% 100%, 30.26% 56%, 0 56%, 0 44%, 30.26% 44%)" }]];
+        case "greece":
+            // Band 1 = white (odd stripes + cross), band 2 = blue (even stripes + canton).
+            return [
+                [{ rect: [37, 11.11, 63, 11.11] }, { rect: [37, 33.33, 63, 11.11] }, { rect: [14.8, 22.2, 22.2, 11.11] }],
+                [{ rect: [0, 0, 37, 55.55] }, { rect: [37, 0, 63, 11.11] }, { rect: [37, 22.22, 63, 11.11] }],
+            ];
         default:
             return [[WHOLE]];
     }
