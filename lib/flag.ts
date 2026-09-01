@@ -39,7 +39,8 @@ export type LayoutKey =
     | "corner-br"
     | "union"
     | "penta-h"
-    | "penta-v";
+    | "penta-v"
+    | "kiribati";
 
 export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "vertical", name: "Vertical Tricolor", bands: 3 },
@@ -80,6 +81,7 @@ export const LAYOUTS: { key: LayoutKey; name: string; bands: number }[] = [
     { key: "union", name: "Union Jack", bands: 3 },
     { key: "penta-h", name: "5 Stripes", bands: 3 },
     { key: "penta-v", name: "5 Bars", bands: 3 },
+    { key: "kiribati", name: "Kiribati", bands: 3 },
 ];
 
 export type FlagStyle = { baseStyle: CSSProperties; overlays: { clip: string; color: string }[] };
@@ -192,6 +194,9 @@ export function buildFlagStyle(layout: LayoutKey, c1: string, c2: string, c3: st
             return { baseStyle: { background: `linear-gradient(to bottom, ${c1} 0 20%, ${c2} 20% 40%, ${c3} 40% 60%, ${c2} 60% 80%, ${c1} 80% 100%)` }, overlays: [] };
         case "penta-v":
             return { baseStyle: { background: `linear-gradient(to right, ${c1} 0 20%, ${c2} 20% 40%, ${c3} 40% 60%, ${c2} 60% 80%, ${c1} 80% 100%)` }, overlays: [] };
+        case "kiribati":
+            // Base for the Kiribati flag: red top (add the bird sticker), sea stripes below.
+            return { baseStyle: { background: `linear-gradient(to bottom, ${c1} 0 50%, ${c2} 50% 58.33%, ${c3} 58.33% 66.66%, ${c2} 66.66% 75%, ${c3} 75% 83.33%, ${c2} 83.33% 91.66%, ${c3} 91.66% 100%)` }, overlays: [] };
         default:
             return { baseStyle: { background: c1 }, overlays: [] };
     }
@@ -412,6 +417,8 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
             return [[{ rect: [0, 0, 100, 20] }, { rect: [0, 80, 100, 20] }], [{ rect: [0, 20, 100, 20] }, { rect: [0, 60, 100, 20] }], [{ rect: [0, 40, 100, 20] }]];
         case "penta-v":
             return [[{ rect: [0, 0, 20, 100] }, { rect: [80, 0, 20, 100] }], [{ rect: [20, 0, 20, 100] }, { rect: [60, 0, 20, 100] }], [{ rect: [40, 0, 20, 100] }]];
+        case "kiribati":
+            return [[{ rect: [0, 0, 100, 50] }], [{ rect: [0, 50, 100, 8.33] }, { rect: [0, 66.66, 100, 8.33] }, { rect: [0, 83.33, 100, 8.33] }], [{ rect: [0, 58.33, 100, 8.33] }, { rect: [0, 75, 100, 8.33] }, { rect: [0, 91.66, 100, 8.33] }]];
         default:
             return [[WHOLE]];
     }

@@ -28,7 +28,7 @@ type Panel = "idle" | "shape" | "stickers" | "save";
 type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v4";
+const APP_VERSION = "v5";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -335,6 +335,8 @@ export default function CountryMaker() {
 
     const handleDownload = async () => {
         if (!exportRef.current) return;
+        setActiveBand(null);
+        em.setSelectedId(null); // clean flag - no selection outlines in the exported image
         setExporting(true);
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
         try {
@@ -342,10 +344,26 @@ export default function CountryMaker() {
             const el = exportRef.current;
             const scale = Math.min(3, CANVAS_MAX_PX / Math.max(el.offsetWidth, el.offsetHeight, 1));
             const canvas = await html2canvas(el, { backgroundColor: null, scale: Math.max(1, scale), useCORS: true });
+            const name = `${sanitizeFilename(countryName)}.png`;
+            const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/png"));
+            if (!blob) return;
+            const file = new File([blob], name, { type: "image/png" });
+            const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
+            // iOS/touch: the share sheet lets you Save to Photos / camera roll or share anywhere. Desktop just downloads.
+            if (nav.maxTouchPoints > 0 && nav.canShare?.({ files: [file] }) && typeof nav.share === "function") {
+                try {
+                    await nav.share({ files: [file], title: countryName || "My Flag" });
+                    return;
+                } catch {
+                    // user cancelled or share failed - fall through to download
+                }
+            }
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.download = `${sanitizeFilename(countryName)}.png`;
-            link.href = canvas.toDataURL("image/png");
+            link.download = name;
+            link.href = url;
             link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         } finally {
             setExporting(false);
         }
@@ -392,6 +410,10 @@ export default function CountryMaker() {
                             regions={regions}
                             activeBand={activeBand}
                             onPickBand={pickBand}
+                            onDeselect={() => {
+                                setActiveBand(null);
+                                em.setSelectedId(null);
+                            }}
                             placed={em.placed}
                             selectedId={em.selectedId}
                             onSelectEmblem={() => {
@@ -521,8 +543,9 @@ export default function CountryMaker() {
 
                                 <button onClick={handleDownload} className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all active:scale-[0.97] shadow-xl flex items-center justify-center gap-2">
                                     <ArrowDownTrayIcon className="w-5 h-5" />
-                                    Download Flag
+                                    Save / Share
                                 </button>
+                                <p className="text-xs text-zinc-500 mt-3 text-center">On iPad this opens the share sheet - tap Save Image to add it to the camera roll.</p>
                             </div>
                         )}
                     </div>
@@ -536,12 +559,12 @@ export default function CountryMaker() {
                 </section>
             </main>
 
-            <span className="fixed bottom-1.5 right-2.5 z-50 text-[10px] font-mono text-zinc-600 pointer-events-none select-none">{APP_VERSION}</span>
             <footer className="shrink-0 pt-2 text-center text-[11px] text-zinc-500">
                 Original idea by{" "}
                 <a href="https://github.com/nordenheng" target="_blank" rel="noopener noreferrer" className="font-semibold text-zinc-300 hover:text-white underline underline-offset-2">
                     Norden Heng
                 </a>
+                <span className="ml-2 font-mono text-zinc-600">{APP_VERSION}</span>
             </footer>
         </div>
     );
