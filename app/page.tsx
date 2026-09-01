@@ -28,7 +28,7 @@ type Panel = "idle" | "shape" | "stickers" | "save";
 type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v9";
+const APP_VERSION = "v10";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -513,36 +513,13 @@ export default function CountryMaker() {
                                 </div>
                             </div>
                         )}
-
-                        {view === "save" && (
-                            <div>
-                                <PanelHeader title="Save your flag" onClose={() => setPanel("idle")} />
-                                <label htmlFor="country-name" className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2 block">
-                                    Flag name
-                                </label>
-                                <input id="country-name" value={countryName} placeholder="Republic of ..." onChange={(e) => setCountryName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl p-3 text-base focus:border-zinc-500 outline-none mb-5" />
-
-                                <div className="flex items-center justify-between bg-black/25 rounded-2xl p-3.5 mb-6">
-                                    <span className="text-sm text-zinc-200">Rounded corners</span>
-                                    <button onClick={() => setRounded((v) => !v)} aria-pressed={rounded} className={cn("px-4 py-1.5 text-[11px] font-bold uppercase rounded-full border transition", rounded ? "bg-white text-black border-white" : "border-zinc-700 text-zinc-400")}>
-                                        {rounded ? "On" : "Off"}
-                                    </button>
-                                </div>
-
-                                <button onClick={handleDownload} className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all active:scale-[0.97] shadow-xl flex items-center justify-center gap-2">
-                                    <ArrowDownTrayIcon className="w-5 h-5" />
-                                    Save / Share
-                                </button>
-                                <p className="text-xs text-zinc-500 mt-3 text-center">On iPad this opens the share sheet - tap Save Image to add it to the camera roll.</p>
-                            </div>
-                        )}
                     </div>
 
                     <div className="shrink-0 border-t border-white/5 p-2.5 grid grid-cols-4 gap-2">
                         <ToolButton id="shape" label="Shape" icon={<Squares2X2Icon className="w-6 h-6" />} onClick={() => openPanel("shape")} />
                         <ToolButton id="stickers" label="Stickers" icon={<SparklesIcon className="w-6 h-6" />} onClick={() => openPanel("stickers")} />
                         <ToolButton id="random" label="Surprise" icon={<ArrowPathIcon className="w-6 h-6" />} onClick={randomize} />
-                        <ToolButton id="save" label="Save" icon={<ArrowDownTrayIcon className="w-6 h-6" />} onClick={() => openPanel("save")} />
+                        <ToolButton id="save" label="Save" icon={<ArrowDownTrayIcon className="w-6 h-6" />} onClick={handleDownload} />
                     </div>
                 </section>
             </main>
