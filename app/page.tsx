@@ -20,7 +20,7 @@ import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon
 // 17 distinct colors (+ the rainbow custom = 18 = exactly 3 rows of 6). No near-duplicates.
 const PRESET_COLORS = ["#E4002B", "#FF4D6D", "#FF7A00", "#FFC400", "#FFE100", "#A3D900", "#00A650", "#009B8E", "#00B5E2", "#0072CE", "#00247D", "#6A2FBF", "#B02FB0", "#8B5E34", "#000000", "#808080", "#FFFFFF"];
 
-const CANVAS_MAX_PX = 1400; // cap html2canvas raster so huge emblems never blow up memory
+const CANVAS_MAX_PX = 1400; // cap export raster so huge emblems never blow up memory
 
 type SvgIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 type EmblemEntry = { name: string; slug: string; Icon?: SvgIcon; svg?: string };
@@ -28,7 +28,7 @@ type Panel = "idle" | "shape" | "stickers" | "save";
 type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v14";
+const APP_VERSION = "v15";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -280,12 +280,13 @@ export default function CountryMaker() {
         setExporting(true);
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
         try {
-            const { default: html2canvas } = await import("html2canvas");
+            // html-to-image snapshots through an SVG <foreignObject>, so clip-path overlays (waves, saltire,
+            // crosses) and layered gradient backgrounds render exactly as on screen - html2canvas dropped them.
+            const { toBlob } = await import("html-to-image");
             const el = exportRef.current;
-            const scale = Math.min(3, CANVAS_MAX_PX / Math.max(el.offsetWidth, el.offsetHeight, 1));
-            const canvas = await html2canvas(el, { backgroundColor: null, scale: Math.max(1, scale), useCORS: true });
+            const pixelRatio = Math.max(2, Math.min(3, CANVAS_MAX_PX / Math.max(el.offsetWidth, el.offsetHeight, 1)));
             const name = `${sanitizeFilename(countryName)}.png`;
-            const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/png"));
+            const blob = await toBlob(el, { pixelRatio, cacheBust: true });
             if (!blob) return;
             const file = new File([blob], name, { type: "image/png" });
             const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
