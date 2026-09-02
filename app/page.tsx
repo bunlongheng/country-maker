@@ -1,6 +1,6 @@
 "use client";
 import { FLAG_EMBLEMS } from "@/lib/flagEmblems";
-import { LAYOUTS, buildFlagStyle, bandsForLayout, bandRegions, sanitizeFilename, sanitizeSvg, EMBLEM_COLOR_DEFAULT, type LayoutKey, type Placed } from "@/lib/flag";
+import { LAYOUTS, buildFlagStyle, bandsForLayout, bandRegions, sanitizeFilename, EMBLEM_COLOR_DEFAULT, type LayoutKey, type Placed } from "@/lib/flag";
 import { useEmblems } from "@/lib/useEmblems";
 import { FlagPreview } from "@/components/FlagPreview";
 
@@ -28,7 +28,7 @@ type Panel = "idle" | "shape" | "stickers" | "save";
 type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v13";
+const APP_VERSION = "v14";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -44,8 +44,6 @@ const isLightColor = (hex: string) => {
 };
 
 const EMBLEM_REGISTRY: EmblemEntry[] = [...FLAG_EMBLEMS.map((e) => ({ name: e.name, slug: e.slug, svg: e.svg })), { name: "Star Outline", slug: "star", Icon: StarIcon }, { name: "Moon", slug: "moon", Icon: MoonIcon }, { name: "Heart", slug: "heart", Icon: HeartIcon }];
-
-const EMBLEM_SUGGESTIONS = Array.from(new Set([...EMBLEM_REGISTRY.map((item) => item.slug), "academic-cap", "cloud", "flag", "gift", "hand-raised", "home", "language", "map-pin", "musical-note", "paper-airplane", "puzzle-piece", "scale", "user-group", "wrench"])).sort();
 
 // Big, kid-friendly color dots. Reused by the stripe picker and the sticker picker.
 function ColorGrid({ value, onPick }: { value: string; onPick: (c: string) => void }) {
@@ -117,26 +115,12 @@ export default function CountryMaker() {
     const [c2, setC2] = useState("#0072CE");
     const [c3, setC3] = useState("#E4002B");
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [emblemName, setEmblemName] = useState("");
-    const [customEmblemError, setCustomEmblemError] = useState("");
-    const [customEmblemLoading, setCustomEmblemLoading] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [rounded, setRounded] = useState(false);
     const [activeBand, setActiveBand] = useState<number | null>(null);
     const [panel, setPanel] = useState<Panel>("idle");
 
-    const emblemEntryBySlug = useMemo(() => new Map(EMBLEM_REGISTRY.map((item) => [item.slug, item])), []);
     const emblemEntryByName = useMemo(() => new Map(EMBLEM_REGISTRY.map((item) => [item.name, item])), []);
-
-    const filteredEmblems = useMemo(
-        () =>
-            EMBLEM_REGISTRY.filter((item) => {
-                const query = searchTerm.toLowerCase();
-                return item.name.toLowerCase().includes(query) || item.slug.includes(query);
-            }),
-        [searchTerm],
-    );
 
     const activeBands = bandsForLayout(layout);
     const { baseStyle, overlays } = useMemo(() => buildFlagStyle(layout, c1, c2, c3), [layout, c1, c2, c3]);
@@ -260,18 +244,6 @@ export default function CountryMaker() {
         setActiveBand(null);
         setPanel("idle");
     };
-    const normalizeEmblemName = (raw: string) =>
-        raw
-            .trim()
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-            .replace(/[^a-z0-9-]/g, "");
-    const normalizedEmblemQuery = normalizeEmblemName(emblemName);
-    const emblemMatches = useMemo(() => {
-        if (!normalizedEmblemQuery) return [];
-        return EMBLEM_SUGGESTIONS.filter((slug) => slug.includes(normalizedEmblemQuery)).slice(0, 8);
-    }, [normalizedEmblemQuery]);
-
     const svgForRef = (ref: string): string | undefined => (ref.startsWith("custom:") ? em.customSvgs[ref.slice(7)] : emblemEntryByName.get(ref)?.svg);
     const iconForRef = (ref: string): SvgIcon | undefined => (ref.startsWith("custom:") ? undefined : emblemEntryByName.get(ref)?.Icon);
 
@@ -281,41 +253,6 @@ export default function CountryMaker() {
         if (svg) return <div key={key} className="[&>svg]:w-full [&>svg]:h-full" style={style} dangerouslySetInnerHTML={{ __html: svg }} />;
         const Icon = typeof source === "string" ? iconForRef(source) : source.Icon;
         return Icon ? <Icon key={key} style={style} /> : null;
-    };
-
-    const loadEmblemByName = async (explicitSlug?: string) => {
-        const slug = explicitSlug || normalizeEmblemName(emblemName);
-        if (!slug) {
-            setCustomEmblemError("Enter emblem name, e.g. star");
-            return;
-        }
-        const matched = EMBLEM_REGISTRY.find((item) => item.slug === slug && item.Icon);
-        if (matched) {
-            setEmblemName(slug);
-            em.addEmblem(matched.name);
-            setCustomEmblemError("");
-            return;
-        }
-        setCustomEmblemLoading(true);
-        setCustomEmblemError("");
-        try {
-            const res = await fetch(`https://raw.githubusercontent.com/tailwindlabs/heroicons/master/src/24/outline/${slug}.svg`);
-            if (!res.ok) throw new Error(`Emblem not found: ${slug}`);
-            const rawSvg = await res.text();
-            if (!rawSvg.includes("<svg")) throw new Error("Invalid SVG");
-            const normalizedSvg = sanitizeSvg(rawSvg)
-                .replace(/width="[^"]*"/g, "")
-                .replace(/height="[^"]*"/g, "")
-                .replace(/stroke="[^"]*"/g, 'stroke="currentColor"')
-                .replace(/fill="[^"]*"/g, 'fill="none"');
-            if (!normalizedSvg) throw new Error("Unsafe or invalid SVG");
-            em.addCustomSvg(slug, normalizedSvg);
-            em.addEmblem(`custom:${slug}`);
-        } catch (err: any) {
-            setCustomEmblemError(err?.message || "Failed to load emblem");
-        } finally {
-            setCustomEmblemLoading(false);
-        }
     };
 
     const randomize = () => {
@@ -513,9 +450,9 @@ export default function CountryMaker() {
                                                 onClick={() => em.addEmblem(item.name, EMBLEM_DEFAULT_COLORS[item.name])}
                                                 aria-label={`Add ${item.name} emblem to flag`}
                                                 title={`Add ${item.name}`}
-                                                className={cn("rounded-md transition flex justify-center items-center active:scale-90", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}
+                                                className={cn("rounded-md transition flex justify-center items-center active:scale-90 p-1.5", onFlag ? "bg-white/15 text-white ring-1 ring-white/40" : "bg-white/[0.03] text-zinc-300 hover:text-white")}
                                             >
-                                                {renderEmblem(item, { width: 20, height: 20, color: "currentColor" })}
+                                                {renderEmblem(item, { width: "100%", height: "100%", color: "currentColor" })}
                                             </button>
                                         );
                                     })}
