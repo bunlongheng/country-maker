@@ -444,7 +444,12 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
         case "corner-br":
             return [[WHOLE], [{ clip: "polygon(100% 100%, 54% 100%, 100% 34%)" }]];
         case "union":
-            return [[{ rect: [3, 3, 15, 14] }], [{ rect: [20, 6, 12, 9] }], [{ rect: [46, 2, 8, 12] }]];
+            // Whole field taps band 1; the wide (band 2) and narrow (band 3) crosses+saltires sit on top so tapping any arm works.
+            return [
+                [WHOLE],
+                [{ clip: "polygon(0% 0%, 15% 0%, 100% 78%, 100% 100%, 85% 100%, 0% 22%)" }, { clip: "polygon(100% 0%, 100% 22%, 15% 100%, 0% 100%, 0% 78%, 85% 0%)" }, { clip: "polygon(40% 0, 60% 0, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0 60%, 0 40%, 40% 40%)" }],
+                [{ clip: "polygon(0% 0%, 8% 0%, 100% 84%, 100% 100%, 92% 100%, 0% 16%)" }, { clip: "polygon(100% 0%, 100% 16%, 8% 100%, 0% 100%, 0% 84%, 92% 0%)" }, { clip: "polygon(45% 0, 55% 0, 55% 45%, 100% 45%, 100% 55%, 55% 55%, 55% 100%, 45% 100%, 45% 55%, 0 55%, 0 45%, 45% 45%)" }],
+            ];
         case "penta-h":
             return [[{ rect: [0, 0, 100, 20] }, { rect: [0, 80, 100, 20] }], [{ rect: [0, 20, 100, 20] }, { rect: [0, 60, 100, 20] }], [{ rect: [0, 40, 100, 20] }]];
         case "penta-v":
