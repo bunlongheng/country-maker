@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { LAYOUTS, buildFlagStyle, bandsForLayout, sanitizeFilename, toggleInList, sanitizeSvg, clampPos, centerNudge, addEmblemAt, upsertText, moveItem, type Placed } from "@/lib/flag";
+import { LAYOUTS, buildFlagStyle, bandsForLayout, flagFilename, toggleInList, sanitizeSvg, clampPos, centerNudge, addEmblemAt, upsertText, moveItem, type Placed } from "@/lib/flag";
 
 describe("buildFlagStyle", () => {
     it("returns a background for every one of the 14 layouts", () => {
@@ -36,16 +36,21 @@ describe("bandsForLayout", () => {
     });
 });
 
-describe("sanitizeFilename", () => {
-    it("kebab-cases and strips unsafe chars", () => {
-        expect(sanitizeFilename("Republic of Norden!")).toBe("republic-of-norden");
+describe("flagFilename", () => {
+    it("stamps the date and time the country was born", () => {
+        expect(flagFilename(new Date(2026, 8, 5, 7, 15, 30))).toBe("country-2026-09-05-071530");
     });
-    it("collapses repeats and trims dashes", () => {
-        expect(sanitizeFilename("  --A & B--  ")).toBe("a-b");
+    it("zero-pads every field", () => {
+        expect(flagFilename(new Date(2026, 0, 2, 3, 4, 5))).toBe("country-2026-01-02-030405");
     });
-    it("falls back to flag when empty", () => {
-        expect(sanitizeFilename("")).toBe("flag");
-        expect(sanitizeFilename("###")).toBe("flag");
+    it("is filesystem-safe and sorts chronologically", () => {
+        const early = flagFilename(new Date(2026, 8, 5, 7, 15, 30));
+        const later = flagFilename(new Date(2026, 8, 5, 7, 15, 31));
+        expect(early).toMatch(/^country-[0-9-]+$/);
+        expect([later, early].sort()).toEqual([early, later]);
+    });
+    it("gives two flags made a second apart different names", () => {
+        expect(flagFilename(new Date(2026, 8, 5, 7, 15, 30))).not.toBe(flagFilename(new Date(2026, 8, 5, 7, 15, 31)));
     });
 });
 

@@ -470,15 +470,12 @@ export function bandRegions(layout: LayoutKey): BandShape[][] {
     }
 }
 
-/** Turn a country name into a safe PNG filename. */
-export function sanitizeFilename(name: string): string {
-    return (
-        (name || "flag")
-            .toLowerCase()
-            .replace(/[^a-z0-9-]/gi, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-|-$/g, "") || "flag"
-    );
+/** Name an exported flag after the moment it was made, so you can tell when each country was born. */
+export function flagFilename(now: Date = new Date()): string {
+    const p = (n: number) => String(n).padStart(2, "0");
+    const date = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
+    const time = `${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
+    return `country-${date}-${time}`;
 }
 
 /** Add item if absent, remove if present. Pure - returns a new array. */

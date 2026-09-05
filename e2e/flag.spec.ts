@@ -18,9 +18,9 @@ test("build a flag: add stickers, Save downloads immediately", async ({ page }) 
     await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3, { steps: 8 });
     await page.mouse.up();
 
-    // tapping Save downloads straight away (no name panel); filename comes from the default name
+    // tapping Save downloads straight away (no name panel); the filename stamps when the country was born
     const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save", exact: true }).click()]);
-    expect(dl.suggestedFilename()).toBe("republic-of-norden.png");
+    expect(dl.suggestedFilename()).toMatch(/^country-\d{4}-\d{2}-\d{2}-\d{6}\.png$/);
 });
 
 test("no sticker, switch shapes, still downloads", async ({ page }) => {

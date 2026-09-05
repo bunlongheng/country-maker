@@ -1,6 +1,6 @@
 "use client";
 import { FLAG_EMBLEMS } from "@/lib/flagEmblems";
-import { LAYOUTS, buildFlagStyle, bandsForLayout, bandRegions, sanitizeFilename, EMBLEM_COLOR_DEFAULT, type LayoutKey, type Placed } from "@/lib/flag";
+import { LAYOUTS, buildFlagStyle, bandsForLayout, bandRegions, flagFilename, EMBLEM_COLOR_DEFAULT, type LayoutKey, type Placed } from "@/lib/flag";
 import { useEmblems } from "@/lib/useEmblems";
 import { FlagPreview } from "@/components/FlagPreview";
 
@@ -25,10 +25,10 @@ const CANVAS_MAX_PX = 1400; // cap export raster so huge emblems never blow up m
 type SvgIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 type EmblemEntry = { name: string; slug: string; Icon?: SvgIcon; svg?: string };
 type Panel = "idle" | "shape" | "stickers" | "save";
-type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; countryName: string; placed: Placed[]; customSvgs: Record<string, string> };
+type Snapshot = { layout: LayoutKey; c1: string; c2: string; c3: string; rounded: boolean; placed: Placed[]; customSvgs: Record<string, string> };
 
 // Bump this every deploy so Norden can tell if his tab is on the latest version.
-const APP_VERSION = "v16";
+const APP_VERSION = "v17";
 
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 
@@ -108,7 +108,6 @@ export default function CountryMaker() {
     const exportRef = useRef<HTMLDivElement | null>(null);
     const em = useEmblems();
 
-    const [countryName, setCountryName] = useState("Republic of Norden");
     const [layout, setLayout] = useState<LayoutKey>("nordic");
     // Defaults are all palette colors so they show up checked in the picker.
     const [c1, setC1] = useState("#FFFFFF");
@@ -156,7 +155,7 @@ export default function CountryMaker() {
     }, [em.selectedId, em.removePlaced]);
 
     // ---- Undo / redo: debounced snapshots of the whole design (coalesces drags/slides into one step) ----
-    const snapNow = (): Snapshot => ({ layout, c1, c2, c3, rounded, countryName, placed: em.placed, customSvgs: em.customSvgs });
+    const snapNow = (): Snapshot => ({ layout, c1, c2, c3, rounded, placed: em.placed, customSvgs: em.customSvgs });
     const past = useRef<Snapshot[]>([]);
     const future = useRef<Snapshot[]>([]);
     const lastSnap = useRef<Snapshot | null>(null);
@@ -182,7 +181,7 @@ export default function CountryMaker() {
             setCanRedo(false);
         }, 350);
         return () => clearTimeout(t);
-    }, [layout, c1, c2, c3, rounded, countryName, em.placed, em.customSvgs]);
+    }, [layout, c1, c2, c3, rounded, em.placed, em.customSvgs]);
 
     const applySnap = (s: Snapshot) => {
         applying.current = true;
@@ -191,7 +190,6 @@ export default function CountryMaker() {
         setC2(s.c2);
         setC3(s.c3);
         setRounded(s.rounded);
-        setCountryName(s.countryName);
         em.restore(s.placed, s.customSvgs);
         setActiveBand(null);
         setPanel("idle");
@@ -285,7 +283,7 @@ export default function CountryMaker() {
             const { toBlob } = await import("html-to-image");
             const el = exportRef.current;
             const pixelRatio = Math.max(2, Math.min(3, CANVAS_MAX_PX / Math.max(el.offsetWidth, el.offsetHeight, 1)));
-            const name = `${sanitizeFilename(countryName)}.png`;
+            const name = `${flagFilename()}.png`;
             const blob = await toBlob(el, { pixelRatio, cacheBust: true });
             if (!blob) return;
             const file = new File([blob], name, { type: "image/png" });
@@ -293,7 +291,7 @@ export default function CountryMaker() {
             // iOS/touch: the share sheet lets you Save to Photos / camera roll or share anywhere. Desktop just downloads.
             if (nav.maxTouchPoints > 0 && nav.canShare?.({ files: [file] }) && typeof nav.share === "function") {
                 try {
-                    await nav.share({ files: [file], title: countryName || "My Flag" });
+                    await nav.share({ files: [file], title: "My Flag" });
                     return;
                 } catch {
                     // user cancelled or share failed - fall through to download
