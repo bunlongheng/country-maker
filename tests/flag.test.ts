@@ -82,9 +82,9 @@ describe("placed emblems", () => {
     });
 
     it("addEmblemAt appends a selected-ready item near centre", () => {
-        const next = addEmblemAt(base, "e2", "Crown");
+        const next = addEmblemAt(base, "e2", "Dragon");
         expect(next).toHaveLength(2);
-        expect(next[1]).toMatchObject({ id: "e2", kind: "emblem", ref: "Crown" });
+        expect(next[1]).toMatchObject({ id: "e2", kind: "emblem", ref: "Dragon" });
         expect(next[1].x).toBeGreaterThanOrEqual(50);
     });
 
@@ -97,7 +97,7 @@ describe("placed emblems", () => {
     });
 
     it("moveItem clamps and only touches the target", () => {
-        const two = addEmblemAt(base, "e2", "Crown");
+        const two = addEmblemAt(base, "e2", "Dragon");
         const moved = moveItem(two, "e2", 999, -5);
         expect(moved.find((p) => p.id === "e2")).toMatchObject({ x: 100, y: 0 });
         expect(moved.find((p) => p.id === "e1")).toMatchObject({ x: 50, y: 50 });

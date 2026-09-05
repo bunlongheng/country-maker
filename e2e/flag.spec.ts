@@ -8,7 +8,7 @@ test("build a flag: add stickers, Save downloads immediately", async ({ page }) 
     // the flag starts empty - add two stickers from the picker
     await page.getByRole("button", { name: "Stickers", exact: true }).click();
     await page.getByRole("button", { name: "Add Sun emblem to flag" }).click();
-    await page.getByRole("button", { name: "Add Crown emblem to flag" }).click();
+    await page.getByRole("button", { name: "Add Dragon emblem to flag" }).click();
     await expect(page.getByText(/2 on the flag/)).toBeVisible();
 
     // drag the selected sticker on the flag
