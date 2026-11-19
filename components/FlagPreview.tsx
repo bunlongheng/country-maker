@@ -132,7 +132,7 @@ export function FlagPreview(p: Props) {
         if (e.target === e.currentTarget) p.onDeselect();
     };
     return (
-        <div className="h-full w-full flex items-center justify-center p-4 sm:p-6 lg:p-8" onPointerDown={clearIfBackground}>
+        <div className="h-full w-full flex items-center justify-center p-4 sm:p-6 lg:p-8 [container-type:size]" onPointerDown={clearIfBackground}>
             <div
                 ref={p.exportRef}
                 onPointerDown={clearIfBackground}
@@ -150,7 +150,8 @@ export function FlagPreview(p: Props) {
                 <div
                     ref={p.flagRef}
                     style={{
-                        width: "min(100%, 500px)",
+                        // Also fit the card height (open foldable / landscape); export keeps the plain width.
+                        width: p.exporting ? "min(100%, 500px)" : "min(100%, 500px, 150cqh)",
                         aspectRatio: "3 / 2",
                         marginInline: "auto",
                         borderRadius: p.rounded ? "1rem" : "0px",
