@@ -132,7 +132,7 @@ export function FlagPreview(p: Props) {
         if (e.target === e.currentTarget) p.onDeselect();
     };
     return (
-        <div className="h-full w-full flex items-center justify-center p-4 sm:p-6 lg:p-8 [container-type:size]" onPointerDown={clearIfBackground}>
+        <div className="h-full w-full flex items-center justify-center p-4 sm:p-6 lg:p-8" style={{ containerType: "size" }} onPointerDown={clearIfBackground}>
             <div
                 ref={p.exportRef}
                 onPointerDown={clearIfBackground}
